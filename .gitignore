@@ -1,0 +1,51 @@
+# Node / Vite
+node_modules/
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Browser test artifacts
+playwright-report/
+test-results/
+blob-report/
+
+# Tooling / development-server logs
+*.log
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Local HTTPS certificates / private keys (keep outside the repository when possible)
+.certs/
+certs/
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Personal sketch exports in the repository root (curated fixtures stay trackable)
+/sheetmusicomposer-*.json
+
+# Debug binaries
+src/__debug_bin*.exe
+*.exe
+
+# Go build output
+*.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local planning docs. No trailing slash: in a linked worktree `plans` is a symlink, which a
+# directory-only pattern would not match.
+plans
+AGENTS.md
+
+# Local deploy settings (host IP etc.)
+deploy/deploy.local.env

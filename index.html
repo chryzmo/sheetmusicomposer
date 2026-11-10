@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f1e9" />
+    <title>Sheet Music Composer</title>
+  </head>
+  <body>
+    <main class="app">
+      <header class="toolbar">
+        <div>
+          <p class="eyebrow">A sketchpad for musical ideas</p>
+          <h1>Sheet Music Composer</h1>
+        </div>
+        <div class="tools" role="group" aria-label="Sketch controls">
+          <button id="new-page" type="button" disabled>New</button>
+          <button id="undo" type="button" aria-keyshortcuts="Control+Z Meta+Z" disabled>Undo</button>
+          <button id="redo" type="button" aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y" disabled>Redo</button>
+          <button id="fit-staff" type="button" disabled>Fit staff</button>
+          <button id="download" type="button" disabled>Download backup</button>
+          <button id="restore" type="button" disabled>Restore backup</button>
+          <input id="backup-file" type="file" accept=".json,application/json" aria-label="Choose sketch backup" hidden />
+        </div>
+        <span class="milestone">Ink surface · in development</span>
+      </header>
+      <section class="workspace" aria-label="Music sketch workspace">
+        <canvas id="score" aria-label="Music ink surface" aria-describedby="workspace-help" aria-disabled="true">
+          A five-line staff for Apple Pencil handwriting. Canvas support is required.
+        </canvas>
+      </section>
+      <footer>
+        <p id="workspace-help">Draw with Apple Pencil. Pan with one finger; pinch with two to zoom. Lift palm contacts before navigating. One sketch autosaves on this browser and origin; keep JSON backups.</p>
+        <output id="ink-status" aria-live="polite">0 strokes</output>
+        <output id="save-status" role="status">Loading sketch…</output>
+        <button id="retry-save" type="button" hidden>Retry saving</button>
+        <button id="keep-storage" type="button" hidden>Request persistent storage</button>
+        <output id="storage-note" aria-live="polite"></output>
+        <output id="backup-status" role="status"></output>
+      </footer>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
