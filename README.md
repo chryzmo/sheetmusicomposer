@@ -16,7 +16,7 @@ When the Pencil touches down, existing touch contacts and any new contacts durin
 
 **Record fixture** freezes the current page as one measure, previews numbered strokes, and lets you enter expected primitive groups and notes/rests before downloading validated JSON. It does not change the sketch or run recognition. See [recording and reviewing fixtures](fixtures/README.md).
 
-Canvas recognition, notation rendering, and offline cold starts are not implemented yet. The user reported the fixture-recorder iPad test passing. The first real Pencil fixture is checked in with primitive-only labels; collecting more template/evaluation samples and confirming note-event ground truth are still needed before connecting pitch/simple-duration recognition. Pencil drawing with a resting palm, touch navigation, undo/redo, backup restore/save/reload after the timestamp fix, and New-page behavior have passed initial user testing on an iPad. See [the iPad checklist](docs/ipad-testing.md).
+Canvas recognition, notation rendering, and offline cold starts are not implemented yet. The user reported the fixture-recorder iPad test passing. Three real Pencil recordings are checked in with primitive-only labels, including separate development and reserved evaluation exports. The classifier still needs improvement/calibration, and note-event ground truth needs confirmation before connecting pitch/simple-duration recognition. Pencil drawing with a resting palm, touch navigation, undo/redo, backup restore/save/reload after the timestamp fix, and New-page behavior have passed initial user testing on an iPad. See [the iPad checklist](docs/ipad-testing.md).
 
 ### Milestone 2 progress
 
@@ -81,7 +81,7 @@ The initial file schema is `{ "format": "sheetmusicomposer", "version": 1, "docu
 npm run lint
 npm run typecheck
 npm test
-npm run test:fixtures  # validation, inventory, and development primitive-classifier report
+npm run test:fixtures  # validation, split inventory, regression and development reports; evaluation stays reserved
 npm run build
 npx playwright install --with-deps webkit
 npm run test:e2e
@@ -124,7 +124,7 @@ Local planning/agent instructions and deployment overrides remain ignored. Revie
 - `src/recognize/`: shared primitive labels, pure $P matching, synthetic seeds, and experimental geometry/distance/margin primitive classification; no canvas integration yet.
 - `public/third-party-notices.txt`: required $P license/citation, copied into the deployed artifact.
 - `fixtures/`: reviewed ink JSON with manual expectations, with recorded Pencil samples kept separate from explicitly synthetic examples.
-- `tests/fixtures/`: recursive loading/round-trip tests plus per-set/per-primitive development confusion and rejection reporting with manual grouping; no held-out accuracy claim.
+- `tests/fixtures/`: recursive loading/round-trips, explicit regression/development/evaluation roles, and development confusion/rejection reporting with manual grouping. Reserved evaluation is not scored automatically; no held-out accuracy claim.
 - `src/config.ts`: document/view defaults, visual ink width, import limits, and explicitly experimental recognition thresholds.
 - `src/style.css`: responsive workspace shell.
 - `tests/e2e/`: WebKit drawing, undo/redo, navigation, resize, real IndexedDB reload/conflict tests, backup/restore, fixture export/label validation, and simulated storage failures.

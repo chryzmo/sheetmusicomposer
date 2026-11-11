@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseFixture } from '../../src/fixtures/schema';
 import type { InkFixture } from '../../src/fixtures/schema';
+import { fixtureRole } from './roles';
 
 export interface LoadedFixture { readonly path: string; readonly fixture: InkFixture }
 
@@ -28,11 +29,14 @@ export function loadFixtures(directory: string): LoadedFixture[] {
 export function fixtureInventory(fixtures: readonly LoadedFixture[]): string {
   const sets = new Map<string, number>();
   const primitives = new Map<string, number>();
-  for (const { fixture } of fixtures) {
+  const roles = new Map<string, number>();
+  for (const { fixture, path } of fixtures) {
+    const role = fixtureRole(path);
+    roles.set(role, (roles.get(role) ?? 0) + 1);
     const set = `${fixture.set} (${fixture.provenance})`;
     sets.set(set, (sets.get(set) ?? 0) + 1);
     for (const { label } of fixture.expected.primitives) primitives.set(label, (primitives.get(label) ?? 0) + 1);
   }
   const counts = (values: Map<string, number>): string => Array.from(values).sort(([a], [b]) => a.localeCompare(b)).map(([key, count]) => `${key}: ${count}`).join(', ');
-  return `Fixture inventory — ${fixtures.length} files\nSets: ${counts(sets)}\nExpected primitives: ${counts(primitives)}\nRecognition accuracy: N/A — inventory/schema checks only (development classifier results reported separately).`;
+  return `Fixture inventory — ${fixtures.length} files\nSets: ${counts(sets)}\nRoles: ${counts(roles)}\nExpected primitives: ${counts(primitives)}\nRecognition accuracy: N/A — inventory/schema checks only (development classifier results reported separately).`;
 }
