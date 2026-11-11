@@ -1,6 +1,6 @@
 # Recorded ink fixtures
 
-Fixtures pair original staff-space ink with **manually entered expectations**. They are not recognition output or ordinary sketch backups. The recorder and loader do not run a recognizer yet.
+Fixtures pair original staff-space ink with **manually entered expectations**. They are not recognition output or ordinary sketch backups. The recorder and loader do not run recognition. A separate development test harness now evaluates the experimental primitive classifier on manually annotated groups; it does not evaluate automatic grouping or musical events.
 
 ## Recording on the iPad
 
@@ -17,7 +17,7 @@ Fixtures pair original staff-space ink with **manually entered expectations**. T
 Transfer the JSON to your development machine using Files or another method you trust. Review it, remove identifying notes, and copy it into `fixtures/recorded/`. Keep the original raw samples, IDs, order, completion, timestamps, pressure, and tilt unchanged; edit only expectations/metadata when correcting a label. `.gitattributes` disables line-ending normalization for recorded JSON, preserving original export bytes while allowing CRLF-aware whitespace checks and normal text diffs.
 
 ```sh
-npm run test:fixtures   # recursive validation, round-trip tests, visible inventory
+npm run test:fixtures   # validation/round-trips, inventory, development classifier report
 npm test               # includes the reviewed fixtures as well as unit tests
 ```
 
@@ -36,11 +36,12 @@ Human-facing stroke numbers are converted to original string IDs at export. The 
 
 ## Current inventory and accuracy
 
-`synthetic/` contains **three hand-authored smoke tests**, not real handwriting:
+`synthetic/` contains **three hand-authored smoke tests plus a classifier boundary suite**, not real handwriting:
 
 - Filled head + stem, with an expected C4 quarter note.
 - Hollow head + stem, with an expected E4 half note.
 - An ambiguous/unsupported mark that stays unknown, including interrupted ink and decreasing timestamps.
+- `classifier-boundaries.json`: 12 groups checking experimental size/aspect, raw-path, multi-stroke, and interruption gates. Eleven have known intended labels that the initial conservative policy rejects, plus an unsupported tap. Intended labels are retained; safe rejection is **not** counted as correct recognition of a known label.
 
 `recorded/quarter-e4.json` is the first real Pencil fixture, exported by the user and retained byte-for-byte. Its original name is `Quarter-e4`, set `personal`, provenance `recorded`. It contains two complete strokes (1,091 head samples and 344 stem samples), manually labeled `noteheadFilled` and `stem`. Its head lies near the bottom staff line (E4), but `expected.events` is empty: this is **primitive-only ground truth**, not yet an assertion of an E4 quarter-note event. No event annotation has been inferred from the filename. The raw ink includes 331 timestamp decreases, preserved unchanged.
 
@@ -48,7 +49,25 @@ Human-facing stroke numbers are converted to original string IDs at export. The 
 | --- | --- | ---: | --- |
 | synthetic-smoke | synthetic | 3 | noteheadFilled: 1; noteheadHollow: 1; stem: 2; unknown: 1 |
 | personal | recorded | 1 | noteheadFilled: 1; stem: 1 |
+| classifier-boundaries | synthetic | 1 | noteheadHollow: 4; stem: 7; unknown: 1 |
 
-Total expected primitive counts: `noteheadFilled: 2`, `noteheadHollow: 1`, `stem: 3`, `unknown: 1`.
+Total: 5 files, with expected primitive counts `noteheadFilled: 2`, `noteheadHollow: 5`, `stem: 10`, `unknown: 2`.
 
-**Recognition accuracy: N/A before and after this change.** The current suite validates schema, source references, and lossless serialization only. Establish per-primitive and per-set recognition accuracy in milestone 2, keeping recorded and synthetic results separate. Do not report these schema checks as recognition successes.
+**Held-out recognition accuracy: N/A → N/A.** Schema validation still proves only source-reference integrity and lossless serialization. Separately, the first experimental classifier report evaluates **oracle/manual groups**, not automatically recognized notes. It prints per-set/provenance confusion cells, exact label agreement, acceptance coverage, wrong accepts, rejected known labels, and unknown rejection. It is a development regression baseline, not a held-out benchmark. Existing annotations and original files are unchanged.
+
+| Development set | Before label decisions | Current exact agreement | Accepted | Wrong accepts | Known rejects |
+| --- | --- | ---: | ---: | ---: | ---: |
+| synthetic-smoke | N/A | 3/5 | 2/5 | 0 | 2 |
+| personal (recorded) | N/A | 0/2 | 0/2 | 0 | 2 |
+| classifier-boundaries | new safety cases | 1/12 | 0/12 | 0 | 11 |
+
+The smoke stems pass. Its filled/hollow heads fail distance/margin respectively; its interrupted unknown is rejected. Both real Pencil primitives are rejected (head: distance; stem: geometry). The boundary fixture intentionally exercises rejection, but its 11 known-label misses are still reported honestly. Do not average these sets together or infer general safety from zero wrong accepts in a tiny collection. The classifier remains disconnected from the canvas. See [the recognition design](../docs/recognition.md).
+
+## Needed recordings before enabling recognition
+
+Use the recorder workflow above for two separate collections:
+
+1. **Template/development collection:** a few examples each of filled heads, hollow heads, and stems, in normal staff-space sizes and your usual writing styles. Annotate each primitive separately, including multiple strokes if that is how you draw it. Give the set a clear development name such as `pencil-template-dev`. No musical events are required for isolated primitives.
+2. **Separate evaluation session:** draw fresh examples later, without copying the training samples, plus some unsupported/ambiguous marks. Use a different set such as `pencil-eval-session-2`, preserve truthful primitive labels (use `unknown` only for genuinely ambiguous ink), and keep this session out of template selection and threshold tuning. An inspected/tuned-on evaluation set becomes development data; reserve new recordings for a subsequent independent evaluation.
+
+These exports are fixture data, not a new personal-template persistence format. Review any identifying notes before sharing/committing, and explicitly decide which recordings may be distributed in the repository. A useful dataset and a reviewed calibration step are still required; these instructions do not establish a sample-size or accuracy guarantee.

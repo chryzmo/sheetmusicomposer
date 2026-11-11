@@ -21,6 +21,29 @@ export const config = {
   maxPointCloudSampleCount: 128,
   // $P's starting-point search exponent (the published reference uses 0.5).
   pointCloudSearchExponent: 0.5,
+  // Experimental classifier guesses, NOT calibrated on held-out handwriting.
+  // Weighted $P acceptance distance and top-two label gap at the configured
+  // 32 samples. Retune/revalidate both if the sampling configuration changes.
+  primitiveMaxDistance: 1.5,
+  primitiveMinMargin: 0.4,
+  // Plausible notehead bounds in staff spaces (filled and hollow share these).
+  primitiveHeadMinWidth: 0.4,
+  primitiveHeadMaxWidth: 1.8,
+  primitiveHeadMinHeight: 0.3,
+  primitiveHeadMaxHeight: 1.2,
+  // Dimensionless width/height range: reject narrow loops and flattened marks.
+  primitiveHeadMinAspect: 0.6,
+  primitiveHeadMaxAspect: 2.5,
+  // Plausible stem bounds in staff spaces; size normalization cannot check these.
+  primitiveStemMinHeight: 1.5,
+  primitiveStemMaxHeight: 5,
+  primitiveStemMaxWidth: 0.6,
+  // Dimensionless stem width/height ceiling and endpoint/path-length floor.
+  primitiveStemMaxAspect: 0.25,
+  primitiveStemMinStraightness: 0.85,
+  // Initially support single-stroke stems only; multi-stroke groups remain ink
+  // until reviewed examples justify a less restrictive rule.
+  primitiveStemMaxStrokes: 1,
   // Fixture annotation safety limits, not recognition thresholds.
   maxFixtureTextLength: 2000,
   maxFixtureDots: 2,
