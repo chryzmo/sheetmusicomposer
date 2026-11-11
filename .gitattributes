@@ -1,0 +1,3 @@
+# Recorded exports keep their original bytes, including CRLF line endings.
+# Retain text diffs and normal whitespace checks without treating CR as trailing space.
+fixtures/recorded/**/*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

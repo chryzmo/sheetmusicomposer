@@ -14,7 +14,7 @@ Fixtures pair original staff-space ink with **manually entered expectations**. T
 
 ## Adding a downloaded file
 
-Transfer the JSON to your development machine using Files or another method you trust. Review it, remove identifying notes, and copy it into `fixtures/recorded/` (create that directory when the first real sample arrives). Keep the original raw samples, IDs, order, completion, timestamps, pressure, and tilt unchanged; edit only expectations/metadata when correcting a label.
+Transfer the JSON to your development machine using Files or another method you trust. Review it, remove identifying notes, and copy it into `fixtures/recorded/`. Keep the original raw samples, IDs, order, completion, timestamps, pressure, and tilt unchanged; edit only expectations/metadata when correcting a label. `.gitattributes` disables line-ending normalization for recorded JSON, preserving original export bytes while allowing CRLF-aware whitespace checks and normal text diffs.
 
 ```sh
 npm run test:fixtures   # recursive validation, round-trip tests, visible inventory
@@ -42,6 +42,13 @@ Human-facing stroke numbers are converted to original string IDs at export. The 
 - Hollow head + stem, with an expected E4 half note.
 - An ambiguous/unsupported mark that stays unknown, including interrupted ink and decreasing timestamps.
 
-Expected primitive counts: `noteheadFilled: 1`, `noteheadHollow: 1`, `stem: 2`, `unknown: 1`. Set: `synthetic-smoke` (3 files). There are no reviewed real Pencil samples yet.
+`recorded/quarter-e4.json` is the first real Pencil fixture, exported by the user and retained byte-for-byte. Its original name is `Quarter-e4`, set `personal`, provenance `recorded`. It contains two complete strokes (1,091 head samples and 344 stem samples), manually labeled `noteheadFilled` and `stem`. Its head lies near the bottom staff line (E4), but `expected.events` is empty: this is **primitive-only ground truth**, not yet an assertion of an E4 quarter-note event. No event annotation has been inferred from the filename. The raw ink includes 331 timestamp decreases, preserved unchanged.
+
+| Set | Provenance | Files | Expected primitives |
+| --- | --- | ---: | --- |
+| synthetic-smoke | synthetic | 3 | noteheadFilled: 1; noteheadHollow: 1; stem: 2; unknown: 1 |
+| personal | recorded | 1 | noteheadFilled: 1; stem: 1 |
+
+Total expected primitive counts: `noteheadFilled: 2`, `noteheadHollow: 1`, `stem: 3`, `unknown: 1`.
 
 **Recognition accuracy: N/A before and after this change.** The current suite validates schema, source references, and lossless serialization only. Establish per-primitive and per-set recognition accuracy in milestone 2, keeping recorded and synthetic results separate. Do not report these schema checks as recognition successes.
