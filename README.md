@@ -102,7 +102,7 @@ podman run --rm \
 
 Run `npm ci` on the host first. This command uses the host's installed modules and is intended for Linux x86-64 development; other host architectures may need dependencies installed inside the container. The container is only a testing tool, not part of production deployment.
 
-CI runs for pull requests and pushes to `main`, avoiding duplicate push/PR checks on feature branches. Superseded runs for the same PR/ref are canceled. It uses Ubuntu, installs WebKit with its system dependencies, runs all checks, and uploads the production `dist/` artifact only after tests pass.
+CI runs for pull requests and pushes to `main`, avoiding duplicate push/PR checks on feature branches. Superseded runs for the same PR/ref are canceled. It pins Ubuntu 24.04 to match local WebKit testing, limits WebKit/system-dependency installation to 5 minutes, and caps the overall job at 15 minutes. It runs all checks and uploads the production `dist/` artifact only after tests pass.
 
 ## Repository hygiene
 
