@@ -1,5 +1,6 @@
 import { config } from './config';
 import { historyShortcut } from './edit/shortcuts';
+import { attachFixtureRecorder } from './fixtures/recorder';
 import { attachInkSurface } from './ink/surface';
 import { createDocument } from './model/document';
 import { createAutosave, errorMessage } from './store/autosave';
@@ -123,7 +124,7 @@ retryButton.addEventListener('click', () => autosave?.retry(), options);
 document.addEventListener('keydown', (event) => {
   if (event.defaultPrevented) return;
   const target = event.target;
-  if (target instanceof HTMLElement && (target.isContentEditable || target.closest('input, textarea, select'))) return;
+  if (target instanceof HTMLElement && (target.isContentEditable || target.closest('input, textarea, select, dialog[open]'))) return;
   const action = historyShortcut(event);
   if (!action) return;
   event.preventDefault();
@@ -131,24 +132,28 @@ document.addEventListener('keydown', (event) => {
 }, options);
 
 const urls = new Set<string>();
-downloadButton.addEventListener('click', () => {
-  const current = surface.snapshot();
-  const text = serializeBackup(current);
+function downloadJson(text: string, filename: string): void {
   const blob = new Blob([text], { type: 'application/json' });
-  const exceedsImportLimits = blob.size > config.maxBackupBytes ||
-    current.strokes.length > config.maxStoredStrokes ||
-    current.strokes.reduce((total, stroke) => total + stroke.points.length, 0) > config.maxStoredPoints;
   const url = URL.createObjectURL(blob);
   urls.add(url);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `sheetmusicomposer-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+  link.download = filename;
   document.body.append(link);
   link.click();
   link.remove();
   // Allow iPad's download UI time to consume the URL; keys/storage never leave
   // the browser. A downloaded backup is independent of IndexedDB and its origin.
   setTimeout(() => { URL.revokeObjectURL(url); urls.delete(url); }, 60000);
+}
+attachFixtureRecorder(required<HTMLButtonElement>('#record-fixture'), surface.snapshot, downloadJson, events.signal);
+downloadButton.addEventListener('click', () => {
+  const current = surface.snapshot();
+  const text = serializeBackup(current);
+  const exceedsImportLimits = new Blob([text]).size > config.maxBackupBytes ||
+    current.strokes.length > config.maxStoredStrokes ||
+    current.strokes.reduce((total, stroke) => total + stroke.points.length, 0) > config.maxStoredPoints;
+  downloadJson(text, `sheetmusicomposer-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
   backupStatus.textContent = exceedsImportLimits
     ? 'Full backup download requested, but it exceeds this build’s import safety limits. Keep the file; raise the corresponding configured limits before restoring it.'
     : 'Backup download requested. Keep the JSON file somewhere safe.';

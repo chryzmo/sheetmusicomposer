@@ -1,6 +1,6 @@
 # iPad acceptance checklist: ink, navigation, and storage
 
-Status: the user reported Pencil drawing and rapid strokes with a resting palm working, then accepted touch navigation as looking good. The user also reported undo/redo testing passing on the iPad. After the timestamp validation fix, the user reported the backup restore → Saved → reload/ink recovery test passing on the iPad, followed by New-page testing looking good. Storage error, multi-tab conflict, and other unchecked scenarios below still need device acceptance. Device/OS versions and item-by-item regression results have not been recorded; the checklist below remains the reference for future changes. Automated WebKit tests use synthetic pointer events; they do not prove native Pencil, palm rejection, coalesced-event, or pointer-capture behavior.
+Status: the user reported Pencil drawing and rapid strokes with a resting palm working, then accepted touch navigation as looking good. The user also reported undo/redo testing passing on the iPad. After the timestamp validation fix, the user reported the backup restore → Saved → reload/ink recovery test passing on the iPad, followed by New-page testing looking good. The user subsequently reported the fixture-recorder test checking out; its downloaded JSON has not yet been added to the repository. Storage error, multi-tab conflict, and other unchecked scenarios below still need device acceptance. Device/OS versions and item-by-item regression results have not been recorded; the checklist below remains the reference for future changes. Automated WebKit tests use synthetic pointer events; they do not prove native Pencil, palm rejection, coalesced-event, or pointer-capture behavior.
 
 ## Setup
 
@@ -69,9 +69,22 @@ Status: the user reported Pencil drawing and rapid strokes with a resting palm w
 - Verify browser/origin isolation using only disposable test data: importing a JSON backup is required to move between browsers, devices, ports, or hostnames. Never interpret a blank draft at a different origin as permission to delete the old one.
 - Recheck rapid Pencil strokes, palm suppression, pan/zoom, and toolbar layout with the new save/backup controls present.
 
+## Fixture recorder (initial user testing passed)
+
+The user reported the suggested filled-head + stem → label → expected E4 quarter note → download → close/continue test passing. The exported file is not yet available in the repository for review/loader validation. The broader checks below remain the regression checklist; this report does not establish item-by-item completion.
+
+- Keep a normal backup before using New for a disposable sample. Draw a filled head and stem as two strokes on the staff, then tap **Record fixture**. Check that the frozen preview labels the correct stroke starts 1 and 2.
+- Enter a name/set and time signature. Change the initial unknown group to `noteheadFilled` on stroke `1`, then add `stem` on stroke `2`. Add the expected note with pitch, duration, optional dots/accidental, and sources `1,2`. Verify the native selects, keyboard, dialog scrolling, and close controls work in both orientations.
+- Download the fixture and confirm Files contains retrievable JSON. Transfer it to `fixtures/recorded/`, review the expected result and raw geometry, and run `npm run test:fixtures`. Compare the fixture document to a backup of the same ink: IDs, samples, timestamps, pressure/tilt, and completion must agree.
+- Pan/zoom the page and record it again: the view must not change exported raw positions or staff geometry. Time signature is fixture metadata only; the canvas has no printed signature or barlines yet.
+- Try a rest with no pitch and an unknown/unsupported mark with no event. Unknown stays explicitly labeled ink; export does not run recognition. Try missing, repeated, and out-of-range source numbers and read the validation error before fixing them.
+- Close or press Escape without exporting; drawing and its undo/redo must still work. Reopen: annotations are intentionally reset, and the new snapshot must reflect current ink. Check that opening the recorder does not add an undo step (except finalizing an already active stroke).
+- Recheck ordinary drawing, palm behavior, navigation, New, and backup/restore with the new toolbar button. Fixture JSON is deliberately rejected by Restore backup; retain a normal backup separately.
+
 ## Known limitations
 
-- One current local sketch only; no library, accounts, or sync. No fixture export, recognition, or offline cold starts yet. Undo/redo and the view are session-only.
+- One current local sketch only; no library, accounts, or sync. No recognition or offline cold starts yet. Undo/redo and the view are session-only.
+- The fixture recorder exports the entire current page as one measure; there is no measure selection or recognition accuracy baseline yet. Its annotations are not autosaved. Initial checked-in fixtures are synthetic, not real Pencil samples. See [the fixture guide](../fixtures/README.md).
 - Non-passive canvas touch listeners suppress native gesture handling in addition to `touch-action: none`. They are retained from the inter-stroke improvement reported by the user; application navigation uses Pointer Events, never Touch Events as a second drawing path.
 - IndexedDB can be cleared or evicted; an OS kill can lose uncommitted ink. Wait for Saved and keep downloaded backups. Lifecycle flushes are best effort, not a guarantee.
 - Navigation, resize, and Fit staff change only the view, never the stored staff-space points.
