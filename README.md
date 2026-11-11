@@ -28,7 +28,9 @@ The first foundation step adds shared written-music types in `src/model/music.ts
 
 These are core types/helpers, **not recognition or notation rendering**. The saved sketch is still the version-1 ink-only document; event validation, persistence/migration, and undoable recognition commands must be added before recognized events are written to it. Existing fixture JSON stays version 1 and uses the shared musical vocabulary without changing its data.
 
-Next: expand reviewed templates/evaluation recordings, implement the $P reference classifier, then grouping/assembly, event persistence, and VexFlow rendering. Recognition accuracy is still N/A.
+The next foundation step adds a pure **$P point-cloud matcher** in `src/recognize/templates.ts`, ranked per-label distances/provenance, and three explicitly synthetic seed templates. It operates on copies of stroke geometry, preserves original bounds/IDs, and handles taps, repeats, and pen-up boundaries. It is **not yet a classifier**: there is no unknown-rejection policy or connection to canvas recognition. See [the matcher design and reference checks](docs/recognition.md).
+
+Next: expand reviewed templates/evaluation recordings, add the primitive classifier's geometric checks and unknown rejection, then grouping/assembly, event persistence, and VexFlow rendering. Recognition accuracy is still N/A.
 
 ## Development
 
@@ -119,6 +121,8 @@ Local planning/agent instructions and deployment overrides remain ignored. Revie
 - `src/staff/`: pure staff geometry, treble pitch/position helpers, and CSS-pixel/document-coordinate transforms.
 - `src/store/`: validated versioned JSON, IndexedDB repository, and serialized autosave queue.
 - `src/fixtures/`: DOM-free fixture schema/annotation helpers and the browser recorder dialog.
+- `src/recognize/`: shared primitive labels, pure $P matching/ranked distances, and synthetic experimental seed templates; no canvas recognition integration yet.
+- `public/third-party-notices.txt`: required $P license/citation, copied into the deployed artifact.
 - `fixtures/`: reviewed ink JSON with manual expectations, with recorded Pencil samples kept separate from explicitly synthetic examples.
 - `tests/fixtures/`: recursive fixture loader, validation/round-trip tests, and inventory reporting (recognition accuracy is not established yet).
 - `src/config.ts`: document/view defaults, visual ink width, and import safety limits (no recognition thresholds yet).
@@ -129,7 +133,7 @@ Input capture only collects samples and schedules a render with `requestAnimatio
 
 Completed or interrupted capture is committed through an add-stroke command, which snapshots the original samples. Undo/redo changes document membership without changing sample metadata. The renderer reads the document plus any in-progress stroke. History is intentionally session-only; IndexedDB persists the document separately from its undo stacks. Data loaded from storage or imported JSON is decoded from `unknown` before it reaches the model.
 
-As features land, add the planned `recognize`, `render`, `playback`, and `export` modules rather than building their logic into the entry point. Recognition must stay free of browser APIs. Keep recognition thresholds in `src/config.ts` when introduced.
+As features land, extend `recognize` and add the planned `render`, `playback`, and `export` modules rather than building their logic into the entry point. Recognition must stay free of browser APIs. Keep recognition thresholds in `src/config.ts` when introduced.
 
 ## Deployment
 
@@ -170,6 +174,6 @@ Choose a stable production origin before real sketches are stored: IndexedDB dat
 
 ## Dependencies
 
-Only development tooling is installed for this step: Vite, TypeScript, Vitest, Playwright, ESLint with its TypeScript integration, browser/Node lint globals, Node type definitions, and `@vitejs/plugin-basic-ssl` for HTTPS LAN development. No runtime dependencies are needed yet. VexFlow, Tone.js, and the PWA plugin will be added when their features are implemented.
+Only development tooling is installed for this step: Vite, TypeScript, Vitest, Playwright, ESLint with its TypeScript integration, browser/Node lint globals, Node type definitions, and `@vitejs/plugin-basic-ssl` for HTTPS LAN development. No npm runtime dependencies are needed yet. The adapted $P source is covered by its retained New BSD notice in `public/third-party-notices.txt`; deploy that file with `dist/`. VexFlow, Tone.js, and the PWA plugin will be added when their features are implemented.
 
 Run `npm audit` when reviewing dependency changes, and `npm audit --omit=dev` to check production dependencies separately. The initial install reported moderate advisories in transitive `minimatch` dependencies used by ESLint/TypeScript lint tooling, not shipped in the static app. Review compatible upstream fixes rather than automatically running `npm audit fix --force`.

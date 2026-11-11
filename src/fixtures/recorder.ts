@@ -2,7 +2,8 @@ import { config } from '../config';
 import type { SketchDocument } from '../model/document';
 import { errorMessage } from '../store/autosave';
 import { accidentals, durations, timeSignatures } from '../model/music';
-import { primitiveLabels, serializeFixture } from './schema';
+import { primitiveLabels } from '../recognize/primitives';
+import { serializeFixture } from './schema';
 import { strokeIdsFromNumbers } from './annotations';
 
 function options(values: readonly string[]): string {

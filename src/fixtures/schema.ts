@@ -3,9 +3,9 @@ import type { SketchDocument } from '../model/document';
 import { accidentals, durations, isPitch, timeSignatures } from '../model/music';
 import type { NoteEvent, RestEvent, TimeSignature } from '../model/music';
 import { decodeSketch, object } from '../store/schema';
+import { primitiveLabels } from '../recognize/primitives';
+import type { PrimitiveLabel } from '../recognize/primitives';
 
-export const primitiveLabels = ['noteheadFilled', 'noteheadHollow', 'stem', 'flag', 'beam', 'restBlock', 'restHook', 'quarterRest', 'dot', 'sharp', 'flat', 'natural', 'unknown'] as const;
-export type PrimitiveLabel = typeof primitiveLabels[number];
 export interface ExpectedPrimitive {
   readonly label: PrimitiveLabel;
   readonly strokeIds: readonly string[];
