@@ -15,4 +15,7 @@ export const config = {
   maxBackupBytes: 10 * 1024 * 1024,
   maxStoredStrokes: 10000,
   maxStoredPoints: 1000000,
+  // Fixture annotation safety limits, not recognition thresholds.
+  maxFixtureTextLength: 2000,
+  maxFixtureDots: 2,
 } as const;

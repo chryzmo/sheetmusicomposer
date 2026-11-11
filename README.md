@@ -14,7 +14,9 @@ When the Pencil touches down, existing touch contacts and any new contacts durin
 
 **One current sketch autosaves to IndexedDB** after completed/interrupted strokes, undo/redo, and backup restore. Reload loads that document with a fresh undo history and fitted view. Use **Download backup** and **Restore backup** for portable JSON copies of the original ink. Wait for **Saved on this device** before reloading or closing the page.
 
-Recognition, fixture recording, and offline cold starts are not implemented yet. Next is the fixture recorder. Pencil drawing with a resting palm, touch navigation, undo/redo, backup restore/save/reload after the timestamp fix, and New-page behavior have passed initial user testing on an iPad. See [the iPad checklist](docs/ipad-testing.md).
+**Record fixture** freezes the current page as one measure, previews numbered strokes, and lets you enter expected primitive groups and notes/rests before downloading validated JSON. It does not change the sketch or run recognition. See [recording and reviewing fixtures](fixtures/README.md).
+
+Recognition and offline cold starts are not implemented yet. The user reported the fixture-recorder iPad test passing. Collecting and reviewing real Pencil fixtures is next, before starting pitch/simple-duration recognition. Pencil drawing with a resting palm, touch navigation, undo/redo, backup restore/save/reload after the timestamp fix, and New-page behavior have passed initial user testing on an iPad. See [the iPad checklist](docs/ipad-testing.md).
 
 ## Development
 
@@ -65,12 +67,13 @@ The initial file schema is `{ "format": "sheetmusicomposer", "version": 1, "docu
 npm run lint
 npm run typecheck
 npm test
+npm run test:fixtures  # reviewed-file validation and inventory; no recognizer yet
 npm run build
 npx playwright install --with-deps webkit
 npm run test:e2e
 ```
 
-Vitest runs pure unit tests without a browser and exits after each run; the pre-commit hook runs this suite, not browser tests. Playwright tests the production build using WebKit with an iPad device profile, with two workers to limit browser memory use. Browser tests start their own preview server on port 4173; stop any existing server on that port first. Actual Pencil behavior still needs manual iPad testing.
+Vitest runs pure unit tests and reviewed fixture validation without a browser and exits after each run; the pre-commit hook runs this suite, not browser tests. Playwright tests the production build using WebKit with an iPad device profile, with two workers to limit browser memory use. Browser tests start their own preview server on port 4173; stop any existing server on that port first. Actual Pencil behavior still needs manual iPad testing.
 
 ### Fedora browser testing
 
@@ -103,9 +106,12 @@ Local planning/agent instructions and deployment overrides remain ignored. Revie
 - `src/ink/`: typed strokes, explicit sample collector, DOM-free touch gesture math, pointer-event adapter, and canvas rendering.
 - `src/staff/`: pure staff geometry and CSS-pixel/document-coordinate transforms.
 - `src/store/`: validated versioned JSON, IndexedDB repository, and serialized autosave queue.
+- `src/fixtures/`: DOM-free fixture schema/annotation helpers and the browser recorder dialog.
+- `fixtures/`: reviewed ink JSON with manual expectations; initial examples are explicitly synthetic.
+- `tests/fixtures/`: recursive fixture loader, validation/round-trip tests, and inventory reporting (recognition accuracy is not established yet).
 - `src/config.ts`: document/view defaults, visual ink width, and import safety limits (no recognition thresholds yet).
 - `src/style.css`: responsive workspace shell.
-- `tests/e2e/`: WebKit drawing, undo/redo, navigation, resize, real IndexedDB reload/conflict tests, backup/restore, and simulated storage failures.
+- `tests/e2e/`: WebKit drawing, undo/redo, navigation, resize, real IndexedDB reload/conflict tests, backup/restore, fixture export/label validation, and simulated storage failures.
 
 Input capture only collects samples and schedules a render with `requestAnimationFrame`. Pen cancellation, capture loss, focus loss, and resizing preserve samples already received. Synthetic pointer events cover the browser adapter in tests; native Pencil capture, coalesced samples, and palm behavior require the device checklist. Pressure and tilt are preserved as raw data but do not change stroke width yet; smoothing is also deferred so original samples remain untouched.
 

@@ -1,0 +1,14 @@
+{
+  "format": "sheetmusicomposer-fixture", "version": 1,
+  "name": "synthetic-unknown-mark", "set": "synthetic-smoke", "provenance": "synthetic",
+  "notes": "Hand-authored unsupported/ambiguous mark. Expected to remain ink, with no event. Tests interrupted samples and decreasing timestamps; not real handwriting.",
+  "staff": { "units": "staff-space", "lineYs": [0, 1, 2, 3, 4], "width": 40, "clef": "treble", "timeSignature": "6/8" },
+  "document": { "strokes": [
+    { "id": "unknown", "completion": "interrupted", "points": [
+      { "x": 8, "y": 2, "t": 120, "pressure": 0.7, "tiltX": 20, "tiltY": -10 },
+      { "x": 8.5, "y": 1, "t": 130, "pressure": 0.5, "tiltX": 22, "tiltY": -12 },
+      { "x": 8, "y": 3, "t": 100, "pressure": 0.2, "tiltX": 19, "tiltY": -11 }
+    ] }
+  ] },
+  "expected": { "primitives": [ { "label": "unknown", "strokeIds": ["unknown"] } ], "events": [] }
+}
