@@ -1,0 +1,255 @@
+{
+  "format": "sheetmusicomposer-recognition-evaluation",
+  "version": 1,
+  "candidate": "pencil-v1",
+  "frozenCommit": "558fa7db84514e30309e9990dcb6915b5a4855b5",
+  "manifest": "tests/evaluation/frozen-pencil-v1.ts",
+  "runtime": {
+    "node": "24.18.0",
+    "platform": "linux"
+  },
+  "protocol": "First classification after a committed source/data freeze; manual oracle groups; 15 development templates only; no post-result tuning.",
+  "limitations": "Single user/designated session, 20 groups; not automatic grouping, complete notes, device latency, population accuracy, or a safety guarantee.",
+  "counts": {
+    "total": 20,
+    "exact": 15,
+    "accepted": 10,
+    "wrongAccepted": 0,
+    "knownCorrect": 10,
+    "knownRejected": 5,
+    "unknownRejected": 5
+  },
+  "observations": [
+    {
+      "annotation": 1,
+      "expected": "noteheadFilled",
+      "predicted": "noteheadFilled",
+      "rejection": null,
+      "margin": 0.34680095877056294,
+      "linearityRatio": 0.5323578927772352,
+      "nearestLabel": "noteheadFilled",
+      "nearestDistance": 1.3882242685041053,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 2,
+      "expected": "noteheadFilled",
+      "predicted": "unknown",
+      "rejection": "margin",
+      "margin": 0.0690827998203567,
+      "linearityRatio": 0.49045460556362436,
+      "nearestLabel": "noteheadFilled",
+      "nearestDistance": 1.3806139768749832,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 3,
+      "expected": "noteheadFilled",
+      "predicted": "noteheadFilled",
+      "rejection": null,
+      "margin": 0.3271208645731576,
+      "linearityRatio": 0.42950569667759675,
+      "nearestLabel": "noteheadFilled",
+      "nearestDistance": 1.3287366002897574,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 4,
+      "expected": "noteheadFilled",
+      "predicted": "unknown",
+      "rejection": "margin",
+      "margin": 0.07590906843688083,
+      "linearityRatio": 0.3986510757553157,
+      "nearestLabel": "noteheadFilled",
+      "nearestDistance": 1.1325454325161148,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 5,
+      "expected": "noteheadFilled",
+      "predicted": "unknown",
+      "rejection": "margin",
+      "margin": 0.007710812287216262,
+      "linearityRatio": 0.6139784877094846,
+      "nearestLabel": "noteheadHollow",
+      "nearestDistance": 1.4215910085713834,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 6,
+      "expected": "noteheadHollow",
+      "predicted": "noteheadHollow",
+      "rejection": null,
+      "margin": 0.459213240126644,
+      "linearityRatio": 0.6046313469779536,
+      "nearestLabel": "noteheadHollow",
+      "nearestDistance": 1.306082006489131,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 7,
+      "expected": "noteheadHollow",
+      "predicted": "noteheadHollow",
+      "rejection": null,
+      "margin": 0.1829431727460913,
+      "linearityRatio": 0.4957046684398928,
+      "nearestLabel": "noteheadHollow",
+      "nearestDistance": 1.2755582104446097,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 8,
+      "expected": "noteheadHollow",
+      "predicted": "unknown",
+      "rejection": "margin",
+      "margin": 0.08150423224792025,
+      "linearityRatio": 0.34891922178563456,
+      "nearestLabel": "noteheadFilled",
+      "nearestDistance": 1.2694383275721999,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 9,
+      "expected": "noteheadHollow",
+      "predicted": "noteheadHollow",
+      "rejection": null,
+      "margin": 0.23915395710032428,
+      "linearityRatio": 0.4276556196896313,
+      "nearestLabel": "noteheadHollow",
+      "nearestDistance": 1.1493647577743282,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 10,
+      "expected": "noteheadHollow",
+      "predicted": "noteheadHollow",
+      "rejection": null,
+      "margin": 0.4629626209516635,
+      "linearityRatio": 0.2986947262574922,
+      "nearestLabel": "noteheadHollow",
+      "nearestDistance": 0.9069105882124711,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 11,
+      "expected": "stem",
+      "predicted": "stem",
+      "rejection": null,
+      "margin": 2.0440554173978933,
+      "linearityRatio": 0.0004410053043805919,
+      "nearestLabel": "stem",
+      "nearestDistance": 0.7131038892320933,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 12,
+      "expected": "stem",
+      "predicted": "stem",
+      "rejection": null,
+      "margin": 3.136629756650862,
+      "linearityRatio": 0.0013809327855392212,
+      "nearestLabel": "stem",
+      "nearestDistance": 0.5646046872225302,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 13,
+      "expected": "stem",
+      "predicted": "stem",
+      "rejection": null,
+      "margin": 2.919397638496591,
+      "linearityRatio": 0.0041037773552887674,
+      "nearestLabel": "stem",
+      "nearestDistance": 0.7780846663676361,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 14,
+      "expected": "stem",
+      "predicted": "unknown",
+      "rejection": "geometry",
+      "margin": 1.1344931133615859,
+      "linearityRatio": 0.002770603302330575,
+      "nearestLabel": "stem",
+      "nearestDistance": 3.1152121147539997,
+      "nearestGeometryRejections": [
+        "stem-aspect"
+      ]
+    },
+    {
+      "annotation": 15,
+      "expected": "stem",
+      "predicted": "stem",
+      "rejection": null,
+      "margin": 2.4615772739508777,
+      "linearityRatio": 0.0007782951990679074,
+      "nearestLabel": "stem",
+      "nearestDistance": 0.4849374869090354,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 16,
+      "expected": "unknown",
+      "predicted": "unknown",
+      "rejection": "distance",
+      "margin": 0.16962281885032393,
+      "linearityRatio": 0.0021586330952056794,
+      "nearestLabel": "noteheadFilled",
+      "nearestDistance": 2.2593939736299737,
+      "nearestGeometryRejections": []
+    },
+    {
+      "annotation": 17,
+      "expected": "unknown",
+      "predicted": "unknown",
+      "rejection": "geometry",
+      "margin": 0.486314682826575,
+      "linearityRatio": 0.001716568696704688,
+      "nearestLabel": "noteheadFilled",
+      "nearestDistance": 2.22488862000155,
+      "nearestGeometryRejections": [
+        "head-aspect"
+      ]
+    },
+    {
+      "annotation": 18,
+      "expected": "unknown",
+      "predicted": "unknown",
+      "rejection": "geometry",
+      "margin": 3.042171021675519,
+      "linearityRatio": 0.0008350768976226149,
+      "nearestLabel": "stem",
+      "nearestDistance": 0.49919936362995215,
+      "nearestGeometryRejections": [
+        "stem-size"
+      ]
+    },
+    {
+      "annotation": 19,
+      "expected": "unknown",
+      "predicted": "unknown",
+      "rejection": "geometry",
+      "margin": 2.516066242995358,
+      "linearityRatio": 0.0024191055555048,
+      "nearestLabel": "stem",
+      "nearestDistance": 0.48906492838059606,
+      "nearestGeometryRejections": [
+        "stem-size"
+      ]
+    },
+    {
+      "annotation": 20,
+      "expected": "unknown",
+      "predicted": "unknown",
+      "rejection": "geometry",
+      "margin": 0.6618473238718949,
+      "linearityRatio": 0.0016093230697460136,
+      "nearestLabel": "stem",
+      "nearestDistance": 3.68134893679326,
+      "nearestGeometryRejections": [
+        "stem-size",
+        "stem-aspect"
+      ]
+    }
+  ]
+}

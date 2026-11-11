@@ -53,7 +53,7 @@ Human-facing stroke numbers are converted to original string IDs at export. The 
 | classifier-boundaries | synthetic | 1 | noteheadHollow: 4; stem: 7; unknown: 1 |
 | classifier-linearity | synthetic | 1 | stem: 2; unknown: 4 |
 | Pencil-template-dev-1 | recorded | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5 |
-| Pencil-eval-session-2 | recorded, reserved evaluation | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5; unknown: 5 |
+| Pencil-eval-session-2 | recorded, frozen evaluation | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5; unknown: 5 |
 
 Total: 8 files, with expected primitive counts `noteheadFilled: 12`, `noteheadHollow: 15`, `stem: 22`, `unknown: 11`. Inventory counts include evaluation; automatic classification reports do not score it.
 
@@ -68,14 +68,14 @@ Schema validation proves only source-reference integrity and lossless serializat
 
 The smoke stems and hollow head now pass; its filled head still fails distance and its interrupted unknown is rejected. The original real Pencil stem now passes while its filled head still fails distance. The boundary suite's three newly supported stems retain their original intended labels; its eight remaining known-label misses are still reported honestly. Do not average these sets together or infer general safety from zero wrong accepts in a tiny collection. The classifier remains disconnected from the canvas. See [the recognition design](../docs/recognition.md).
 
-## Development and reserved evaluation recordings
+## Development and frozen evaluation recordings
 
 The user authorized repository distribution of these corrected exports. They are copied byte-for-byte, with original names, sets, labels, raw samples, and CRLF endings retained:
 
 | Original export | Repository path | Role | Annotation inventory |
 | --- | --- | --- | --- |
 | `Dev.json` | `recorded/development/pencil-dev-1.json` | Development | 15 one-stroke primitives, five of each supported label |
-| `Evals.json` | `recorded/evaluation/pencil-eval-1.json` | Reserved evaluation | 20 one-stroke primitives, five of each supported label plus five unknowns |
+| `Evals.json` | `recorded/evaluation/pencil-eval-1.json` | Evaluation (first frozen candidate scored) | 20 one-stroke primitives, five of each supported label plus five unknowns |
 
 Both have empty expected-event lists and blank notes. The earlier, incorrectly grouped exports are **not** imported. Tests pin the new originals' SHA-256 hashes:
 
@@ -96,6 +96,8 @@ These are **different template-bank experiments**, not a replacement of the synt
 The candidate replaces raw endpoint/travel straightness with a minor/major covariance ratio on derived clouds, permits observed slant, and lowers the top-two margin from 0.4 to 0.1 while retaining the 1.5 distance cutoff. Its full policy and source hashes are frozen before recognition evaluation in `tests/evaluation/frozen-pencil-v1.ts`. See [the design and caveats](../docs/recognition.md).
 
 Run `npm run test:recognition-eval` explicitly to evaluate the frozen 15-template development bank. The command is excluded from ordinary tests/CI, verifies model/data/runner hashes before scoring, and refuses changed sources. Do not rewrite those hashes after seeing results; use the frozen commit to reproduce that experiment. At freeze time the evaluation recording has only schema/annotation/integrity/overlap checks, not recognition results, and its five unknowns are not calibration negatives. After the first evaluation, tuning against its results would require new independent data to claim fresh held-out accuracy.
+
+The first recognition evaluation has now been run after committing freeze `558fa7d`: **10/15 known symbols correctly accepted, five known symbols rejected, all 5/5 unknown marks rejected, zero wrong accepted labels in this small collection**. Overall exact label/rejection agreement is 15/20; this is not full-pipeline or population accuracy. No predictor changes followed the result. See [the frozen result and reproduction protocol](../docs/recognition-evaluations/pencil-v1.md). This collection is now observed, not an unseen reserve for future tuning.
 
 ## Collecting additional recordings
 

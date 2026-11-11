@@ -16,7 +16,7 @@ When the Pencil touches down, existing touch contacts and any new contacts durin
 
 **Record fixture** freezes the current page as one measure, previews numbered strokes, and lets you enter expected primitive groups and notes/rests before downloading validated JSON. It does not change the sketch or run recognition. See [recording and reviewing fixtures](fixtures/README.md).
 
-Canvas recognition, notation rendering, and offline cold starts are not implemented yet. The user reported the fixture-recorder iPad test passing. Three real Pencil recordings are checked in with primitive-only labels, including separate development and reserved evaluation exports. The classifier still needs improvement/calibration, and note-event ground truth needs confirmation before connecting pitch/simple-duration recognition. Pencil drawing with a resting palm, touch navigation, undo/redo, backup restore/save/reload after the timestamp fix, and New-page behavior have passed initial user testing on an iPad. See [the iPad checklist](docs/ipad-testing.md).
+Canvas recognition, notation rendering, and offline cold starts are not implemented yet. The user reported the fixture-recorder iPad test passing. Three real Pencil recordings are checked in with primitive-only labels, including separate development and evaluation exports. The classifier still needs improvement/calibration, and note-event ground truth needs confirmation before connecting pitch/simple-duration recognition. Pencil drawing with a resting palm, touch navigation, undo/redo, backup restore/save/reload after the timestamp fix, and New-page behavior have passed initial user testing on an iPad. See [the iPad checklist](docs/ipad-testing.md).
 
 ### Milestone 2 progress
 
@@ -30,7 +30,9 @@ These are core types/helpers, **not recognition or notation rendering**. The sav
 
 A pure **$P point-cloud matcher** in `src/recognize/templates.ts` provides ranked per-label distances/provenance and three explicitly synthetic seed templates. It operates on copies of stroke geometry, preserves original bounds/IDs, and handles taps, repeats, and pen-up boundaries. The experimental `classifyPrimitive()` adds staff-space geometry checks, distance/margin rejection, and explicit `unknown` results for already-grouped inputs. Its policy remains experimental: covariance-based stem linearity tolerates retracing/slant, and a development-informed distance margin improves same-recording leave-one-group-out agreement to 13/15, with two ambiguous heads still unknown. This is not independent accuracy or negative-rejection calibration. It is **not connected to the canvas**, and no grouping/assembly or model changes occur. See [the design, development results, and limitations](docs/recognition.md).
 
-Next: freeze/evaluate the classifier candidate separately from development results, then grouping/assembly, event persistence/commands, and VexFlow rendering. The opt-in `npm run test:recognition-eval` checks source/data hashes before evaluating the frozen development-only bank; ordinary tests/CI do not score the evaluation recording.
+The [first frozen session evaluation](docs/recognition-evaluations/pencil-v1.md) correctly accepts 10/15 known primitives, leaves five unknown, and rejects all five supplied unknown marks, with no wrong accepted labels in this small collection. This is manually grouped, single-user evidence—not full-pipeline or population accuracy. The opt-in `npm run test:recognition-eval` checks source/data hashes before replaying that frozen development-only bank; ordinary tests/CI do not score evaluation. Its results are now observed and cannot be reused as fresh independent evidence after tuning against them.
+
+Next: conservative grouping/assembly, event persistence/commands, an explicit reviewed runtime template bank, and VexFlow rendering.
 
 ## Development
 
@@ -81,7 +83,7 @@ The initial file schema is `{ "format": "sheetmusicomposer", "version": 1, "docu
 npm run lint
 npm run typecheck
 npm test
-npm run test:fixtures  # validation, split inventory, regression and development reports; evaluation stays reserved
+npm run test:fixtures  # validation, split inventory, regression/development reports; evaluation is opt-in
 npm run build
 npx playwright install --with-deps webkit
 npm run test:e2e
@@ -124,7 +126,8 @@ Local planning/agent instructions and deployment overrides remain ignored. Revie
 - `src/recognize/`: shared primitive labels, pure $P matching, synthetic seeds, and experimental geometry/distance/margin primitive classification; no canvas integration yet.
 - `public/third-party-notices.txt`: required $P license/citation, copied into the deployed artifact.
 - `fixtures/`: reviewed ink JSON with manual expectations, with recorded Pencil samples kept separate from explicitly synthetic examples.
-- `tests/fixtures/`: recursive loading/round-trips, explicit regression/development/evaluation roles, and development confusion/rejection reporting with manual grouping. Reserved evaluation is not scored automatically; no held-out accuracy claim.
+- `tests/fixtures/`: recursive loading/round-trips, explicit regression/development/evaluation roles, and development confusion/rejection reporting with manual grouping. Evaluation is not scored automatically.
+- `tests/evaluation/`: an opt-in frozen-candidate evaluation runner and source/data hashes; excluded from ordinary unit tests and CI.
 - `src/config.ts`: document/view defaults, visual ink width, import limits, and explicitly experimental recognition thresholds.
 - `src/style.css`: responsive workspace shell.
 - `tests/e2e/`: WebKit drawing, undo/redo, navigation, resize, real IndexedDB reload/conflict tests, backup/restore, fixture export/label validation, and simulated storage failures.
