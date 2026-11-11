@@ -1,10 +1,11 @@
 import { config } from '../config';
 import type { Stroke } from '../ink/types';
 import type { SimplePrimitive } from './primitives';
+import { cloudLinearityRatio } from './geometry';
 import { preparePointCloud, rankPointCloud } from './templates';
 import type { PointCloudTemplate, PreparedCloud, TemplateCandidate } from './templates';
 
-export type GeometryRejection = 'head-size' | 'head-aspect' | 'stem-size' | 'stem-aspect' | 'stem-strokes' | 'stem-straightness';
+export type GeometryRejection = 'head-size' | 'head-aspect' | 'stem-size' | 'stem-aspect' | 'stem-strokes' | 'stem-linearity';
 export type PrimitiveRejection = 'interrupted' | 'no-templates' | 'geometry' | 'distance' | 'missing-alternative' | 'margin';
 export interface PrimitiveCandidate extends TemplateCandidate<SimplePrimitive> {
   readonly geometryRejections: readonly GeometryRejection[];
@@ -12,6 +13,8 @@ export interface PrimitiveCandidate extends TemplateCandidate<SimplePrimitive> {
 interface ClassificationDetails {
   readonly strokeIds: readonly string[];
   readonly bounds: PreparedCloud['bounds'];
+  /** Geometric line-fit descriptor, not confidence; 0 is collinear, 1 isotropic. */
+  readonly linearityRatio: number;
   /** Full best-per-label ranking, including geometrically ineligible labels. */
   readonly candidates: readonly PrimitiveCandidate[];
   /** Runner-up distance minus best distance; null without a second label. */
@@ -22,12 +25,12 @@ export type PrimitiveClassification = ClassificationDetails & (
   | { readonly label: 'unknown'; readonly rejection: PrimitiveRejection }
 );
 
-function geometryRejections(label: SimplePrimitive, strokes: readonly Stroke[], bounds: PreparedCloud['bounds']): GeometryRejection[] {
+function geometryRejections(label: SimplePrimitive, strokes: readonly Stroke[], bounds: PreparedCloud['bounds'], linearityRatio: number): GeometryRejection[] {
   const { width, height } = bounds;
   const aspect = height > 0 ? width / height : Infinity;
   const reasons: GeometryRejection[] = [];
-  // These bounds/ratios are conservative guesses, not learned handwriting
-  // statistics. Synthetic safety fixtures exercise their rejection behavior.
+  // These bounds/ratios remain experimental guesses, with slanted-stem
+  // allowances informed by development data, not held-out handwriting.
   if (label !== 'stem') {
     if (width < config.primitiveHeadMinWidth || width > config.primitiveHeadMaxWidth ||
         height < config.primitiveHeadMinHeight || height > config.primitiveHeadMaxHeight) reasons.push('head-size');
@@ -37,17 +40,11 @@ function geometryRejections(label: SimplePrimitive, strokes: readonly Stroke[], 
   if (height < config.primitiveStemMinHeight || height > config.primitiveStemMaxHeight || width > config.primitiveStemMaxWidth) reasons.push('stem-size');
   if (aspect > config.primitiveStemMaxAspect) reasons.push('stem-aspect');
   if (strokes.length > config.primitiveStemMaxStrokes) reasons.push('stem-strokes');
-  // A shape cloud forgets traversal. Check the raw pen-down path too so an
-  // up/down scribble cannot become a stem merely by having a narrow cloud.
-  const stroke = strokes[0]!;
-  let length = 0;
-  for (let i = 1; i < stroke.points.length; i++) {
-    const a = stroke.points[i - 1]!, b = stroke.points[i]!;
-    length += Math.hypot(b.x - a.x, b.y - a.y);
-  }
-  const first = stroke.points[0]!, last = stroke.points.at(-1)!;
-  const straightness = length > 0 ? Math.hypot(last.x - first.x, last.y - first.y) / length : 0;
-  if (straightness < config.primitiveStemMinStraightness) reasons.push('stem-straightness');
+  // Fit the derived body, not total raw travel: natural jitter and retracing
+  // must not fail just because the pen revisits earlier positions. This does
+  // NOT distinguish a retraced stem from a straight scribble/delete gesture;
+  // gesture interpretation and attachment still need separate context.
+  if (linearityRatio > config.primitiveStemMaxLinearityRatio) reasons.push('stem-linearity');
   return reasons;
 }
 
@@ -60,8 +57,9 @@ function geometryRejections(label: SimplePrimitive, strokes: readonly Stroke[], 
  */
 export function classifyPrimitive(strokes: readonly Stroke[], templates: readonly PointCloudTemplate<SimplePrimitive>[]): PrimitiveClassification {
   const cloud = preparePointCloud(strokes);
+  const linearityRatio = cloudLinearityRatio(cloud.points);
   const candidates = rankPointCloud(cloud, templates).map((candidate): PrimitiveCandidate => ({
-    ...candidate, geometryRejections: geometryRejections(candidate.label, strokes, cloud.bounds),
+    ...candidate, geometryRejections: geometryRejections(candidate.label, strokes, cloud.bounds, linearityRatio),
   }));
   const best = candidates[0], second = candidates[1];
   const margin = best && second ? second.distance - best.distance : null;
@@ -74,7 +72,7 @@ export function classifyPrimitive(strokes: readonly Stroke[], templates: readonl
     : margin === null ? 'missing-alternative'
     : margin < config.primitiveMinMargin ? 'margin'
     : null;
-  const details: ClassificationDetails = { strokeIds: cloud.strokeIds, bounds: cloud.bounds, candidates, margin };
+  const details: ClassificationDetails = { strokeIds: cloud.strokeIds, bounds: cloud.bounds, linearityRatio, candidates, margin };
   return rejection === null
     ? { ...details, label: best!.label, rejection: null }
     : { ...details, label: 'unknown', rejection };

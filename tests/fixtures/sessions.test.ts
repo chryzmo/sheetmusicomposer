@@ -49,7 +49,7 @@ it('detects source overlap without running recognition on reserved input', () =>
 
 it('requires an explicit role for every file, including future imports', () => {
   expect(fixtures.map(({ path }) => fixtureRole(path)).sort()).toEqual([
-    'development', 'evaluation', 'regression', 'regression', 'regression', 'regression', 'regression',
+    'development', 'evaluation', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression',
   ]);
   expect(() => fixtureRole(join(fixtureRoot, 'recorded/unassigned.json'))).toThrow('Unassigned fixture role');
 });
@@ -91,15 +91,16 @@ it.each(['unknown', 'flag'] as const)('never trains an accepted class from a %s 
   expect(createDevelopmentTemplates([variant])).toHaveLength(14);
 });
 
-it('reports development-only baseline and leave-one-group-out misses without scoring the reserved session', () => {
+it('reports improved development decisions and remaining ambiguity without scoring the reserved session', () => {
   const before = structuredClone(development);
   const seed = evaluatePrimitives(development, createBuiltinTemplates());
   const observations = evaluateDevelopmentLeaveOneOut(development);
   expect(observations).toHaveLength(15);
-  expect(seed.filter(({ expected, result }) => expected === result.label)).toHaveLength(3);
-  expect(observations.every(({ result }) => result.label === 'unknown')).toBe(true);
-  expect(observations.filter(({ result }) => result.rejection === 'margin')).toHaveLength(10);
-  expect(observations.filter(({ result }) => result.rejection === 'geometry')).toHaveLength(5);
+  expect(seed.filter(({ expected, result }) => expected === result.label)).toHaveLength(9);
+  expect(observations.filter(({ expected, result }) => expected === result.label)).toHaveLength(13);
+  expect(observations.filter(({ result }) => result.rejection === 'margin')).toHaveLength(2);
+  expect(observations.filter(({ result }) => result.rejection === 'geometry')).toHaveLength(0);
+  expect(observations.filter(({ expected, result }) => result.label !== 'unknown' && result.label !== expected)).toHaveLength(0);
   for (const [index, { result }] of observations.entries()) {
     const excluded = `development/${dev.fixture.name}/primitive-${index + 1}`;
     expect(result.candidates.every(({ templateId }) => templateId !== excluded)).toBe(true);

@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:fixtures": "vitest run tests/fixtures --reporter=verbose",
+    "test:recognition-eval": "vitest run --config vitest.evaluation.config.ts --reporter=verbose",
     "test:e2e": "playwright test",
     "hooks:install": "git config --local core.hooksPath .githooks"
   },

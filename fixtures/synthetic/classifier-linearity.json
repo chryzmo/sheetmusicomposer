@@ -1,0 +1,270 @@
+{
+  "format": "sheetmusicomposer-fixture",
+  "version": 1,
+  "name": "synthetic-classifier-linearity",
+  "set": "classifier-linearity",
+  "provenance": "synthetic",
+  "notes": "Hand-authored development cases, not recorded handwriting or held-out data. Intended stems may be retraced/slanted; tall bent, looped, zigzag and over-slanted marks remain unsupported ink. Tests the guessed covariance-linearity and relaxed stem-bound rules. Does not test deletion gestures or musical attachment; no expected events.",
+  "staff": {
+    "units": "staff-space",
+    "lineYs": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "width": 40,
+    "clef": "treble",
+    "timeSignature": "4/4"
+  },
+  "document": {
+    "strokes": [
+      {
+        "id": "retraced-line",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 2,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 2,
+            "y": 3,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 2,
+            "y": 1,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 2,
+            "y": 3,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "slanted-line",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 4,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 4.8,
+            "y": 3,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "bend",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 7,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 8,
+            "y": 1.5,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 7,
+            "y": 3,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "loop",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 10,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 10.8,
+            "y": 1.5,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 10,
+            "y": 3,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 9.2,
+            "y": 1.5,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 10,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "zigzag",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 12,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 13,
+            "y": 0.75,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 12,
+            "y": 1.5,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 13,
+            "y": 2.25,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 12,
+            "y": 3,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "diagonal-slash",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 16,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 18,
+            "y": 2,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "primitives": [
+      {
+        "label": "stem",
+        "strokeIds": [
+          "retraced-line"
+        ]
+      },
+      {
+        "label": "stem",
+        "strokeIds": [
+          "slanted-line"
+        ]
+      },
+      {
+        "label": "unknown",
+        "strokeIds": [
+          "bend"
+        ]
+      },
+      {
+        "label": "unknown",
+        "strokeIds": [
+          "loop"
+        ]
+      },
+      {
+        "label": "unknown",
+        "strokeIds": [
+          "zigzag"
+        ]
+      },
+      {
+        "label": "unknown",
+        "strokeIds": [
+          "diagonal-slash"
+        ]
+      }
+    ],
+    "events": []
+  }
+}

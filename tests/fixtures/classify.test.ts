@@ -15,19 +15,20 @@ const observations = evaluatePrimitives(fixtures, bank);
 it('reports per-set/provenance confusion and rejection without claiming held-out accuracy', () => {
   const report = classificationReport(observations);
   console.info(report);
-  expect(observations).toHaveLength(19);
+  expect(observations).toHaveLength(25);
   expect(report).toContain('NOT held-out handwriting accuracy');
   expect(report).toContain('personal (recorded)');
   expect(report).toContain('synthetic-smoke (synthetic)');
   expect(report).toContain('classifier-boundaries (synthetic)');
 });
 
-it('records the initial development outputs, including known misses rather than relabeling ground truth', () => {
+it('records current regression outputs, preserving original ground truth including known misses', () => {
   const baseline = [
-    ['Quarter-e4', ['unknown', 'unknown']],
-    ['synthetic-half-e4', ['unknown', 'stem']],
+    ['Quarter-e4', ['unknown', 'stem']],
+    ['synthetic-half-e4', ['noteheadHollow', 'stem']],
     ['synthetic-quarter-c4', ['unknown', 'stem']],
     ['synthetic-unknown-mark', ['unknown']],
+    ['synthetic-classifier-linearity', ['stem', 'stem', 'unknown', 'unknown', 'unknown', 'unknown']],
   ] as const;
   for (const [name, labels] of baseline) {
     expect(observations.filter(({ fixtureName }) => fixtureName === name).map(({ result }) => result.label)).toEqual(labels);
@@ -48,11 +49,17 @@ it('counts wrong accepted labels and unknown false accepts separately from safe 
   expect(report).toContain('unknown -> stem: 1');
 });
 
-it('keeps the intentionally out-of-policy/interrupted safety cases as ink, without changing their intended labels', () => {
+it('accepts newly supported slanted/retraced stems while retaining size, interruption, and multi-stroke rejection', () => {
   const boundaries = observations.filter(({ set }) => set === 'classifier-boundaries');
   expect(boundaries).toHaveLength(12);
-  expect(boundaries.every(({ result }) => result.label === 'unknown')).toBe(true);
+  // The original intended labels remain unchanged. Wide/slanted/retraced
+  // examples are now valid stem candidates, not false accepts of unknown ink.
+  expect(boundaries.map(({ result }) => result.label)).toEqual([
+    'unknown', 'unknown', 'stem', 'stem', 'stem', 'unknown',
+    'unknown', 'unknown', 'unknown', 'unknown', 'unknown', 'unknown',
+  ]);
   expect(boundaries.filter(({ expected }) => expected !== 'unknown')).toHaveLength(11);
+  expect(observations.filter(({ expected }) => expected === 'unknown').every(({ result }) => result.label === 'unknown')).toBe(true);
 });
 
 it('does not mutate reviewed fixtures or templates during evaluation', () => {
