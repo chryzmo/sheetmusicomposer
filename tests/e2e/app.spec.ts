@@ -19,6 +19,15 @@ test('loads a rendered ink surface without browser errors', async ({ page }) => 
   expect(errors).toEqual([]);
 });
 
+test('distributes the adapted $P license notice with the static build', async ({ page }) => {
+  const response = await page.request.get('/third-party-notices.txt');
+  expect(response.ok()).toBe(true);
+  const notice = await response.text();
+  expect(notice).toContain('Copyright (C) 2012, Radu-Daniel Vatavu, Lisa Anthony, and');
+  expect(notice).toContain('Redistribution and use in source and binary forms');
+  expect(notice).toContain('THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS');
+});
+
 test('fits a narrow viewport and redraws after resizing', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 });
   const canvas = page.getByLabel('Music ink surface');

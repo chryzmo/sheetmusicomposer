@@ -15,6 +15,12 @@ export const config = {
   maxBackupBytes: 10 * 1024 * 1024,
   maxStoredStrokes: 10000,
   maxStoredPoints: 1000000,
+  // Number of derived samples per $P cloud; raw ink is never resampled in place.
+  pointCloudSampleCount: 32,
+  // Bound the quadratic matching work when preparing experimental clouds.
+  maxPointCloudSampleCount: 128,
+  // $P's starting-point search exponent (the published reference uses 0.5).
+  pointCloudSearchExponent: 0.5,
   // Fixture annotation safety limits, not recognition thresholds.
   maxFixtureTextLength: 2000,
   maxFixtureDots: 2,

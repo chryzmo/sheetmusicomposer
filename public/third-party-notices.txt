@@ -1,0 +1,47 @@
+$P Point-Cloud Recognizer
+
+This project includes a TypeScript adaptation of the $P reference algorithm.
+Upstream: https://depts.washington.edu/acelab/proj/dollar/pdollar.js
+Reference last updated July 14, 2018.
+Retrieved source SHA-256:
+a36ee4b844171de940cb46dde3f3998a8424c68b570a42ed490992aea2ae1654
+
+Citation:
+Vatavu, R.-D., Anthony, L. and Wobbrock, J.O. (2012).
+Gestures as point clouds: A $P recognizer for user interface prototypes.
+Proceedings of the ACM International Conference on Multimodal Interfaces
+(ICMI '12), pp. 273-280. https://dl.acm.org/citation.cfm?id=2388732
+
+Modifications: pure typed APIs, immutable/bounded resampling, numeric range
+checks, degenerate tap handling, and ranked per-label results. No upstream
+demo gesture templates are included. No recognition probability or unknown
+rejection is inferred from a raw matching distance.
+
+This software is distributed under the "New BSD License" agreement:
+
+Copyright (C) 2012, Radu-Daniel Vatavu, Lisa Anthony, and
+Jacob O. Wobbrock. All rights reserved. Last updated July 14, 2018.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+   * Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+   * Neither the names of the University Stefan cel Mare of Suceava,
+     University of Washington, nor UMBC, nor the names of its contributors
+     may be used to endorse or promote products derived from this software
+     without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Radu-Daniel Vatavu OR Lisa Anthony
+OR Jacob O. Wobbrock BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
