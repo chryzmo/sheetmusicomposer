@@ -16,7 +16,7 @@ When the Pencil touches down, existing touch contacts and any new contacts durin
 
 **Record fixture** freezes the current page as one measure, previews numbered strokes, and lets you enter expected primitive groups and notes/rests before downloading validated JSON. It does not change the sketch or run recognition. See [recording and reviewing fixtures](fixtures/README.md).
 
-Recognition and offline cold starts are not implemented yet. The user reported the fixture-recorder iPad test passing. Collecting and reviewing real Pencil fixtures is next, before starting pitch/simple-duration recognition. Pencil drawing with a resting palm, touch navigation, undo/redo, backup restore/save/reload after the timestamp fix, and New-page behavior have passed initial user testing on an iPad. See [the iPad checklist](docs/ipad-testing.md).
+Recognition and offline cold starts are not implemented yet. The user reported the fixture-recorder iPad test passing. The first real Pencil fixture is checked in with primitive-only labels; collecting more samples and confirming note-event ground truth are next, before starting pitch/simple-duration recognition. Pencil drawing with a resting palm, touch navigation, undo/redo, backup restore/save/reload after the timestamp fix, and New-page behavior have passed initial user testing on an iPad. See [the iPad checklist](docs/ipad-testing.md).
 
 ## Development
 
@@ -107,7 +107,7 @@ Local planning/agent instructions and deployment overrides remain ignored. Revie
 - `src/staff/`: pure staff geometry and CSS-pixel/document-coordinate transforms.
 - `src/store/`: validated versioned JSON, IndexedDB repository, and serialized autosave queue.
 - `src/fixtures/`: DOM-free fixture schema/annotation helpers and the browser recorder dialog.
-- `fixtures/`: reviewed ink JSON with manual expectations; initial examples are explicitly synthetic.
+- `fixtures/`: reviewed ink JSON with manual expectations, with recorded Pencil samples kept separate from explicitly synthetic examples.
 - `tests/fixtures/`: recursive fixture loader, validation/round-trip tests, and inventory reporting (recognition accuracy is not established yet).
 - `src/config.ts`: document/view defaults, visual ink width, and import safety limits (no recognition thresholds yet).
 - `src/style.css`: responsive workspace shell.

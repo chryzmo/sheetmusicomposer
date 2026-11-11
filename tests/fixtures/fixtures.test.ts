@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,6 +17,19 @@ it('reports an inventory without claiming recognition accuracy', () => {
 
 it.each(fixtures)('validates and round-trips reviewed fixture $fixture.name', ({ fixture }) => {
   expect(parseFixture(serializeFixture(fixture))).toEqual(fixture);
+});
+
+it('preserves real Pencil samples including repeated positions and decreasing timestamps', () => {
+  const recorded = fixtures.find(({ fixture }) => fixture.name === 'Quarter-e4');
+  if (!recorded) throw new Error('Missing recorded Quarter-e4 fixture');
+  const { fixture, path } = recorded;
+  const original: unknown = JSON.parse(readFileSync(path, 'utf8'));
+  expect(fixture.provenance).toBe('recorded');
+  expect(fixture.document.strokes.map((stroke) => stroke.points.length)).toEqual([1091, 344]);
+  const decreases = fixture.document.strokes.map(({ points }) => points.reduce((count, point, index) =>
+    count + (index > 0 && point.t < points[index - 1]!.t ? 1 : 0), 0));
+  expect(decreases).toEqual([254, 77]);
+  expect(parseFixture(serializeFixture(fixture))).toEqual(original);
 });
 
 it('fails loudly with a path for malformed JSON and unknown versions', () => {
