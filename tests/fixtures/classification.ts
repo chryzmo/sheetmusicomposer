@@ -36,14 +36,14 @@ export function evaluatePrimitives(fixtures: readonly LoadedFixture[], templates
  * Rejected known labels are misses, not successful recognitions. Keep each
  * provenance/set separate; never average safety cases into handwriting accuracy.
  */
-export function classificationReport(observations: readonly PrimitiveObservation[]): string {
+export function classificationReport(observations: readonly PrimitiveObservation[], bankDescription = 'synthetic seed bank'): string {
   const sets = new Map<string, PrimitiveObservation[]>();
   for (const observation of observations) {
     const key = `${observation.set} (${observation.provenance})`;
     const rows = sets.get(key) ?? [];
     rows.push(observation); sets.set(key, rows);
   }
-  const lines = ['Development primitive classification — manual/oracle groups, synthetic seed bank.',
+  const lines = [`Development primitive classification — manual/oracle groups, ${bankDescription}.`,
     'NOT held-out handwriting accuracy or end-to-end recognition; rejects of known labels count as misses.'];
   for (const [set, rows] of Array.from(sets).sort(([a], [b]) => a.localeCompare(b))) {
     const accepted = rows.filter(({ result }) => result.label !== 'unknown');

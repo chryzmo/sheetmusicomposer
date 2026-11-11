@@ -3,8 +3,12 @@ import { expect, it } from 'vitest';
 import { createBuiltinTemplates } from '../../src/recognize/builtins';
 import { classificationReport, evaluatePrimitives } from './classification';
 import { loadFixtures } from './load';
+import { fixtureRole } from './roles';
 
-const fixtures = loadFixtures(fileURLToPath(new URL('../../fixtures/', import.meta.url)));
+// Keep the original regression baseline separate from template development and
+// the reserved evaluation session. Never score a new export by glob accident.
+const fixtures = loadFixtures(fileURLToPath(new URL('../../fixtures/', import.meta.url)))
+  .filter(({ path }) => fixtureRole(path) === 'regression');
 const bank = createBuiltinTemplates();
 const observations = evaluatePrimitives(fixtures, bank);
 
