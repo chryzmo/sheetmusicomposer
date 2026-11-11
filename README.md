@@ -18,6 +18,18 @@ When the Pencil touches down, existing touch contacts and any new contacts durin
 
 Recognition and offline cold starts are not implemented yet. The user reported the fixture-recorder iPad test passing. The first real Pencil fixture is checked in with primitive-only labels; collecting more samples and confirming note-event ground truth are next, before starting pitch/simple-duration recognition. Pencil drawing with a resting palm, touch navigation, undo/redo, backup restore/save/reload after the timestamp fix, and New-page behavior have passed initial user testing on an iPad. See [the iPad checklist](docs/ipad-testing.md).
 
+### Milestone 2 progress
+
+The first foundation step adds shared written-music types in `src/model/music.ts` and pure treble-clef conversions in `src/staff/pitch.ts`:
+
+- Notes/rests carry duration, dots, source-stroke references, and confidence; measures hold a single ordered voice plus unresolved ink references. Rest recognition remains a later milestone.
+- `pitchAtStaffY()` snaps a staff-space notehead center to a written pitch, including ledger positions. The top line is F5 at y=0, bottom line E4 at y=4, and middle C (C4) is at y=5. Exact midpoint ties choose the lower pitch; invalid/out-of-domain positions return no pitch instead of being clamped. `staffYFromPitch()` provides the reverse conversion.
+- The supported pitch representation remains C0–B9, shared with fixture validation. Accidentals do not alter staff y. Pan/zoom/CSS pixels must be converted to staff spaces before pitch lookup.
+
+These are core types/helpers, **not recognition or notation rendering**. The saved sketch is still the version-1 ink-only document; event validation, persistence/migration, and undoable recognition commands must be added before recognized events are written to it. Existing fixture JSON stays version 1 and uses the shared musical vocabulary without changing its data.
+
+Next: expand reviewed templates/evaluation recordings, implement the $P reference classifier, then grouping/assembly, event persistence, and VexFlow rendering. Recognition accuracy is still N/A.
+
 ## Development
 
 Requires Node.js 24 LTS and npm. `.nvmrc` selects the Node major version; commit changes to `package-lock.json` when updating dependencies.
@@ -88,7 +100,7 @@ podman run --rm \
 
 Run `npm ci` on the host first. This command uses the host's installed modules and is intended for Linux x86-64 development; other host architectures may need dependencies installed inside the container. The container is only a testing tool, not part of production deployment.
 
-CI runs for pull requests and pushes to `main`, avoiding duplicate push/PR checks on feature branches. Superseded runs for the same PR/ref are canceled. It uses Ubuntu, installs WebKit with its system dependencies, runs all checks, and uploads the production `dist/` artifact only after tests pass.
+CI runs for pull requests and pushes to `main`, avoiding duplicate push/PR checks on feature branches. Superseded runs for the same PR/ref are canceled. It pins Ubuntu 24.04 to match local WebKit testing, limits WebKit/system-dependency installation to 5 minutes, and caps the overall job at 15 minutes. It runs all checks and uploads the production `dist/` artifact only after tests pass.
 
 ## Repository hygiene
 
@@ -101,10 +113,10 @@ Local planning/agent instructions and deployment overrides remain ignored. Revie
 ## Source layout
 
 - `src/main.ts`: browser entry point, toolbar/keyboard bindings, and unsaved-stroke status.
-- `src/model/`: immutable document shape, independent of capture, view, and history state.
+- `src/model/`: immutable ink document, shared written-music vocabulary, and foundational event/measure types, independent of browser APIs. Musical events are not yet part of the saved ink document.
 - `src/edit/`: DOM-free command history, stroke commands, and keyboard shortcut matching.
 - `src/ink/`: typed strokes, explicit sample collector, DOM-free touch gesture math, pointer-event adapter, and canvas rendering.
-- `src/staff/`: pure staff geometry and CSS-pixel/document-coordinate transforms.
+- `src/staff/`: pure staff geometry, treble pitch/position helpers, and CSS-pixel/document-coordinate transforms.
 - `src/store/`: validated versioned JSON, IndexedDB repository, and serialized autosave queue.
 - `src/fixtures/`: DOM-free fixture schema/annotation helpers and the browser recorder dialog.
 - `fixtures/`: reviewed ink JSON with manual expectations, with recorded Pencil samples kept separate from explicitly synthetic examples.
