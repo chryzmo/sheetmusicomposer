@@ -16,7 +16,7 @@ When the Pencil touches down, existing touch contacts and any new contacts durin
 
 **Record fixture** freezes the current page as one measure, previews numbered strokes, and lets you enter expected primitive groups and notes/rests before downloading validated JSON. It does not change the sketch or run recognition. See [recording and reviewing fixtures](fixtures/README.md).
 
-Recognition and offline cold starts are not implemented yet. The user reported the fixture-recorder iPad test passing. The first real Pencil fixture is checked in with primitive-only labels; collecting more samples and confirming note-event ground truth are next, before starting pitch/simple-duration recognition. Pencil drawing with a resting palm, touch navigation, undo/redo, backup restore/save/reload after the timestamp fix, and New-page behavior have passed initial user testing on an iPad. See [the iPad checklist](docs/ipad-testing.md).
+Canvas recognition, notation rendering, and offline cold starts are not implemented yet. The user reported the fixture-recorder iPad test passing. The first real Pencil fixture is checked in with primitive-only labels; collecting more template/evaluation samples and confirming note-event ground truth are still needed before connecting pitch/simple-duration recognition. Pencil drawing with a resting palm, touch navigation, undo/redo, backup restore/save/reload after the timestamp fix, and New-page behavior have passed initial user testing on an iPad. See [the iPad checklist](docs/ipad-testing.md).
 
 ### Milestone 2 progress
 
@@ -28,7 +28,7 @@ The first foundation step adds shared written-music types in `src/model/music.ts
 
 These are core types/helpers, **not recognition or notation rendering**. The saved sketch is still the version-1 ink-only document; event validation, persistence/migration, and undoable recognition commands must be added before recognized events are written to it. Existing fixture JSON stays version 1 and uses the shared musical vocabulary without changing its data.
 
-The next foundation step adds a pure **$P point-cloud matcher** in `src/recognize/templates.ts`, ranked per-label distances/provenance, and three explicitly synthetic seed templates. It operates on copies of stroke geometry, preserves original bounds/IDs, and handles taps, repeats, and pen-up boundaries. It is **not yet a classifier**: there is no unknown-rejection policy or connection to canvas recognition. See [the matcher design and reference checks](docs/recognition.md).
+A pure **$P point-cloud matcher** in `src/recognize/templates.ts` provides ranked per-label distances/provenance and three explicitly synthetic seed templates. It operates on copies of stroke geometry, preserves original bounds/IDs, and handles taps, repeats, and pen-up boundaries. The experimental `classifyPrimitive()` adds staff-space geometry checks, distance/margin rejection, and explicit `unknown` results for already-grouped inputs. Its thresholds are guesses, not handwriting calibration: it rejects both primitives in the current recorded fixture. It is **not connected to the canvas**, and no grouping/assembly or model changes occur. See [the design, development results, and limitations](docs/recognition.md).
 
 Next: expand reviewed templates/evaluation recordings, add the primitive classifier's geometric checks and unknown rejection, then grouping/assembly, event persistence, and VexFlow rendering. Recognition accuracy is still N/A.
 
@@ -81,7 +81,7 @@ The initial file schema is `{ "format": "sheetmusicomposer", "version": 1, "docu
 npm run lint
 npm run typecheck
 npm test
-npm run test:fixtures  # reviewed-file validation and inventory; no recognizer yet
+npm run test:fixtures  # validation, inventory, and development primitive-classifier report
 npm run build
 npx playwright install --with-deps webkit
 npm run test:e2e
@@ -121,11 +121,11 @@ Local planning/agent instructions and deployment overrides remain ignored. Revie
 - `src/staff/`: pure staff geometry, treble pitch/position helpers, and CSS-pixel/document-coordinate transforms.
 - `src/store/`: validated versioned JSON, IndexedDB repository, and serialized autosave queue.
 - `src/fixtures/`: DOM-free fixture schema/annotation helpers and the browser recorder dialog.
-- `src/recognize/`: shared primitive labels, pure $P matching/ranked distances, and synthetic experimental seed templates; no canvas recognition integration yet.
+- `src/recognize/`: shared primitive labels, pure $P matching, synthetic seeds, and experimental geometry/distance/margin primitive classification; no canvas integration yet.
 - `public/third-party-notices.txt`: required $P license/citation, copied into the deployed artifact.
 - `fixtures/`: reviewed ink JSON with manual expectations, with recorded Pencil samples kept separate from explicitly synthetic examples.
-- `tests/fixtures/`: recursive fixture loader, validation/round-trip tests, and inventory reporting (recognition accuracy is not established yet).
-- `src/config.ts`: document/view defaults, visual ink width, and import safety limits (no recognition thresholds yet).
+- `tests/fixtures/`: recursive loading/round-trip tests plus per-set/per-primitive development confusion and rejection reporting with manual grouping; no held-out accuracy claim.
+- `src/config.ts`: document/view defaults, visual ink width, import limits, and explicitly experimental recognition thresholds.
 - `src/style.css`: responsive workspace shell.
 - `tests/e2e/`: WebKit drawing, undo/redo, navigation, resize, real IndexedDB reload/conflict tests, backup/restore, fixture export/label validation, and simulated storage failures.
 

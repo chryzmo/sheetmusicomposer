@@ -1,0 +1,493 @@
+{
+  "format": "sheetmusicomposer-fixture",
+  "version": 1,
+  "name": "synthetic-classifier-boundaries",
+  "set": "classifier-boundaries",
+  "provenance": "synthetic",
+  "notes": "Hand-authored geometry/interruption safety cases, not handwriting or held-out data. Intended primitive labels are retained even where the experimental classifier deliberately rejects: rejection is not a correct known-label prediction. Includes tiny/large/atypical hollow heads, short/long/wide/leaning/retraced/split/interrupted stems, and an unsupported tap. No expected musical events.",
+  "staff": {
+    "units": "staff-space",
+    "lineYs": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "width": 40,
+    "clef": "treble",
+    "timeSignature": "4/4"
+  },
+  "document": {
+    "strokes": [
+      {
+        "id": "short-stem-0",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 2,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 2,
+            "y": 0.4,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "long-stem-0",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 3,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 3,
+            "y": 6,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "wide-stem-0",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 4,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 4.7,
+            "y": 4,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "leaning-stem-0",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 6,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 6.6,
+            "y": 2,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "retraced-stem-0",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 8,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 8,
+            "y": 3,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 8,
+            "y": 1,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 8,
+            "y": 3,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "split-stem-0",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 10,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 10,
+            "y": 1,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "split-stem-1",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 10,
+            "y": 2,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 10,
+            "y": 3,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "interrupted-stem-0",
+        "completion": "interrupted",
+        "points": [
+          {
+            "x": 12,
+            "y": 0,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 12,
+            "y": 3,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "tiny-head-0",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 14,
+            "y": 0.06,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 14.1,
+            "y": 0,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 14.2,
+            "y": 0.06,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 14.1,
+            "y": 0.12,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 14,
+            "y": 0.06,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "large-head-0",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 16,
+            "y": 0.7,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 17,
+            "y": 0,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 18,
+            "y": 0.7,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 17,
+            "y": 1.4,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 16,
+            "y": 0.7,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "narrow-head-0",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 20,
+            "y": 0.55,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 20.2,
+            "y": 0,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 20.4,
+            "y": 0.55,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 20.2,
+            "y": 1.1,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 20,
+            "y": 0.55,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "flat-head-0",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 22,
+            "y": 0.15,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 22.7,
+            "y": 0,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 23.4,
+            "y": 0.15,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 22.7,
+            "y": 0.3,
+            "t": 0,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          },
+          {
+            "x": 22,
+            "y": 0.15,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      },
+      {
+        "id": "tap-0",
+        "completion": "complete",
+        "points": [
+          {
+            "x": 25,
+            "y": 1,
+            "t": 100,
+            "pressure": 0.6,
+            "tiltX": 0,
+            "tiltY": 0
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "primitives": [
+      {
+        "label": "stem",
+        "strokeIds": [
+          "short-stem-0"
+        ]
+      },
+      {
+        "label": "stem",
+        "strokeIds": [
+          "long-stem-0"
+        ]
+      },
+      {
+        "label": "stem",
+        "strokeIds": [
+          "wide-stem-0"
+        ]
+      },
+      {
+        "label": "stem",
+        "strokeIds": [
+          "leaning-stem-0"
+        ]
+      },
+      {
+        "label": "stem",
+        "strokeIds": [
+          "retraced-stem-0"
+        ]
+      },
+      {
+        "label": "stem",
+        "strokeIds": [
+          "split-stem-0",
+          "split-stem-1"
+        ]
+      },
+      {
+        "label": "stem",
+        "strokeIds": [
+          "interrupted-stem-0"
+        ]
+      },
+      {
+        "label": "noteheadHollow",
+        "strokeIds": [
+          "tiny-head-0"
+        ]
+      },
+      {
+        "label": "noteheadHollow",
+        "strokeIds": [
+          "large-head-0"
+        ]
+      },
+      {
+        "label": "noteheadHollow",
+        "strokeIds": [
+          "narrow-head-0"
+        ]
+      },
+      {
+        "label": "noteheadHollow",
+        "strokeIds": [
+          "flat-head-0"
+        ]
+      },
+      {
+        "label": "unknown",
+        "strokeIds": [
+          "tap-0"
+        ]
+      }
+    ],
+    "events": []
+  }
+}

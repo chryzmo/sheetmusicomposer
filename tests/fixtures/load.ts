@@ -34,5 +34,5 @@ export function fixtureInventory(fixtures: readonly LoadedFixture[]): string {
     for (const { label } of fixture.expected.primitives) primitives.set(label, (primitives.get(label) ?? 0) + 1);
   }
   const counts = (values: Map<string, number>): string => Array.from(values).sort(([a], [b]) => a.localeCompare(b)).map(([key, count]) => `${key}: ${count}`).join(', ');
-  return `Fixture inventory — ${fixtures.length} files\nSets: ${counts(sets)}\nExpected primitives: ${counts(primitives)}\nRecognition accuracy: N/A — no recognizer/baseline yet (schema checks only).`;
+  return `Fixture inventory — ${fixtures.length} files\nSets: ${counts(sets)}\nExpected primitives: ${counts(primitives)}\nRecognition accuracy: N/A — inventory/schema checks only (development classifier results reported separately).`;
 }
