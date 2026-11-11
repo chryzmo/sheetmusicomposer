@@ -16,7 +16,9 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # Match the supported Noble environment used by local WebKit testing.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,7 +31,9 @@ jobs:
       - run: npm test
       - run: npm run test:fixtures
       - run: npm run build
-      - run: npx playwright install --with-deps webkit
+      - name: Install WebKit and system dependencies
+        timeout-minutes: 5
+        run: npx playwright install --with-deps webkit
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         with:
