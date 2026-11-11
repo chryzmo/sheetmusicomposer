@@ -1,26 +1,17 @@
 import { config } from '../config';
 import type { SketchDocument } from '../model/document';
+import { accidentals, durations, isPitch, timeSignatures } from '../model/music';
+import type { NoteEvent, RestEvent, TimeSignature } from '../model/music';
 import { decodeSketch, object } from '../store/schema';
 
 export const primitiveLabels = ['noteheadFilled', 'noteheadHollow', 'stem', 'flag', 'beam', 'restBlock', 'restHook', 'quarterRest', 'dot', 'sharp', 'flat', 'natural', 'unknown'] as const;
-export const durations = ['whole', 'half', 'quarter', 'eighth', 'sixteenth'] as const;
-export const timeSignatures = ['4/4', '3/4', '2/4', '6/8'] as const;
-export const accidentals = ['sharp', 'flat', 'natural'] as const;
-export const pitchSteps = ['C', 'D', 'E', 'F', 'G', 'A', 'B'] as const;
 export type PrimitiveLabel = typeof primitiveLabels[number];
 export interface ExpectedPrimitive {
   readonly label: PrimitiveLabel;
   readonly strokeIds: readonly string[];
 }
-interface ExpectedEventBase {
-  readonly duration: typeof durations[number];
-  readonly dots: number;
-  readonly strokeIds: readonly string[];
-}
-export type ExpectedEvent = ExpectedEventBase & (
-  { readonly kind: 'rest' } |
-  { readonly kind: 'note'; readonly pitch: { readonly step: typeof pitchSteps[number]; readonly octave: number }; readonly accidental: typeof accidentals[number] | null }
-);
+/** Manual ground truth has musical event fields but no inferred confidence/ID. */
+export type ExpectedEvent = Omit<NoteEvent, 'id' | 'confidence'> | Omit<RestEvent, 'id' | 'confidence'>;
 export interface InkFixture {
   readonly format: 'sheetmusicomposer-fixture';
   readonly version: 1;
@@ -33,7 +24,7 @@ export interface InkFixture {
     readonly lineYs: readonly [0, 1, 2, 3, 4];
     readonly width: number;
     readonly clef: 'treble';
-    readonly timeSignature: typeof timeSignatures[number];
+    readonly timeSignature: TimeSignature;
   };
   readonly document: SketchDocument;
   readonly expected: { readonly primitives: readonly ExpectedPrimitive[]; readonly events: readonly ExpectedEvent[] };
@@ -89,10 +80,9 @@ export function decodeFixture(value: unknown): InkFixture {
     }
     if (entry.kind !== 'note') throw new Error('Invalid event kind');
     const pitch = object(entry.pitch);
-    const step = choice(pitch.step, pitchSteps, 'pitch step');
-    if (typeof pitch.octave !== 'number' || !Number.isInteger(pitch.octave) || pitch.octave < 0 || pitch.octave > 9) throw new Error('Invalid pitch octave');
+    if (!isPitch(pitch)) throw new Error('Invalid pitch; expected a written note from C0 through B9');
     const accidental = entry.accidental === null ? null : choice(entry.accidental, accidentals, 'accidental');
-    return { ...base, kind: 'note', pitch: { step, octave: pitch.octave }, accidental };
+    return { ...base, kind: 'note', pitch: { step: pitch.step, octave: pitch.octave }, accidental };
   });
   if (covered.size !== known.size) throw new Error('Label every stroke, using unknown for unsupported or ambiguous ink');
   return {
