@@ -15,6 +15,7 @@ const roles: Readonly<Record<string, FixtureRole>> = {
   'synthetic/half-e4.json': 'regression',
   'synthetic/unknown-mark.json': 'regression',
   'synthetic/classifier-boundaries.json': 'regression',
+  'synthetic/classifier-linearity.json': 'regression',
   'recorded/development/pencil-dev-1.json': 'development',
   'recorded/evaluation/pencil-eval-1.json': 'evaluation',
 };

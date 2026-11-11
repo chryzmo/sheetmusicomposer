@@ -4,7 +4,8 @@ import type { Stroke } from '../ink/types';
 import { createBuiltinTemplates } from './builtins';
 import { classifyPrimitive } from './classify';
 import type { SimplePrimitive } from './primitives';
-import { prepareTemplate } from './templates';
+import { preparePointCloud, prepareTemplate } from './templates';
+import { cloudLinearityRatio } from './geometry';
 
 const bank = createBuiltinTemplates();
 const ink = (points: readonly (readonly [number, number])[], id = 'source'): Stroke => ({
@@ -87,9 +88,9 @@ it('does not promote a weaker eligible label when the nearest match fails geomet
 it.each([
   { name: 'short stem', stroke: line(0.4), label: 'stem', reason: 'stem-size' },
   { name: 'long stem', stroke: line(6), label: 'stem', reason: 'stem-size' },
-  { name: 'wide stem', stroke: line(4, 0.7), label: 'stem', reason: 'stem-size' },
-  { name: 'leaning stem', stroke: line(2, 0.6), label: 'stem', reason: 'stem-aspect' },
-  { name: 'retraced stem', stroke: ink([[0, 0], [0, 3], [0, 1], [0, 3]]), label: 'stem', reason: 'stem-straightness' },
+  { name: 'over-wide stem', stroke: line(4, 2), label: 'stem', reason: 'stem-size' },
+  { name: 'over-leaning stem', stroke: line(1.5, 1.1), label: 'stem', reason: 'stem-aspect' },
+  { name: 'bent stem', stroke: ink([[0, 0], [1, 1.5], [0, 3]]), label: 'stem', reason: 'stem-linearity' },
   { name: 'tiny head', stroke: diamond(0.2, 0.12), label: 'noteheadHollow', reason: 'head-size' },
   { name: 'large head', stroke: diamond(2, 1.4), label: 'noteheadHollow', reason: 'head-size' },
   { name: 'narrow head', stroke: diamond(0.4, 1.1), label: 'noteheadHollow', reason: 'head-aspect' },
@@ -139,11 +140,29 @@ it.each([-1, 1])('checks the label margin on either side of the experimental bou
   expect(result.rejection).toBe(side < 0 ? 'margin' : null);
 });
 
-it.each([-1, 1])('checks stem straightness around its experimental boundary (%s)', (side) => {
-  const overshoot = (3 / config.primitiveStemMinStraightness - 3) / 2 * (1 + side * 1e-8);
-  const result = classifyPrimitive([ink([[0, 0], [0, 3 + overshoot], [0, 3]])], bank);
+it.each([-1, 1])('checks stem linearity around its experimental boundary (%s)', (side) => {
+  const bend = (width: number): Stroke => ink([[0, 0], [width, 1.5], [0, 3]]);
+  // Symmetric V paths have zero xy covariance and minor variance proportional
+  // to width squared. Construct cutoff neighbors, not handwriting samples.
+  const unitRatio = cloudLinearityRatio(preparePointCloud([bend(1)]).points);
+  const width = Math.sqrt(config.primitiveStemMaxLinearityRatio / unitRatio) * (1 + side * 1e-8);
+  const result = classifyPrimitive([bend(width)], bank);
   const reasons = result.candidates.find(({ label }) => label === 'stem')!.geometryRejections;
-  expect(reasons.includes('stem-straightness')).toBe(side > 0);
+  expect(reasons.includes('stem-linearity')).toBe(side > 0);
+});
+
+it('accepts a retraced straight stem candidate without mistaking traversal for curvature', () => {
+  const result = classifyPrimitive([ink([[0, 0], [0, 3], [0, 1], [0, 3]])], bank);
+  expect(result.label).toBe('stem');
+  expect(result.linearityRatio).toBe(0);
+});
+
+it('permits the development-informed slant without rotating templates or promoting a weaker label', () => {
+  const stroke = line(3, 1.5);
+  const result = classifyPrimitive([stroke], [example('stem', [stroke]), ...bank.filter(({ label }) => label !== 'stem')]);
+  expect(result.label).toBe('stem');
+  expect(result.bounds).toEqual({ x: 0, y: 0, width: 1.5, height: 3 });
+  expect(result.candidates[0]?.geometryRejections).toEqual([]);
 });
 
 it('is independent of timestamp order and stem traversal direction', () => {

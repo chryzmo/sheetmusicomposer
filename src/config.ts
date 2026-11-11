@@ -21,11 +21,12 @@ export const config = {
   maxPointCloudSampleCount: 128,
   // $P's starting-point search exponent (the published reference uses 0.5).
   pointCloudSearchExponent: 0.5,
-  // Experimental classifier guesses, NOT calibrated on held-out handwriting.
-  // Weighted $P acceptance distance and top-two label gap at the configured
-  // 32 samples. Retune/revalidate both if the sampling configuration changes.
+  // Experimental classifier policy, NOT population-calibrated probabilities.
+  // Weighted $P distance cutoff is unchanged; the smaller top-two label gap
+  // is development-informed (same-session leave-one-group-out, not held-out
+  // validation). Both apply at 32 samples; revalidate if sampling changes.
   primitiveMaxDistance: 1.5,
-  primitiveMinMargin: 0.4,
+  primitiveMinMargin: 0.1,
   // Plausible notehead bounds in staff spaces (filled and hollow share these).
   primitiveHeadMinWidth: 0.4,
   primitiveHeadMaxWidth: 1.8,
@@ -34,13 +35,18 @@ export const config = {
   // Dimensionless width/height range: reject narrow loops and flattened marks.
   primitiveHeadMinAspect: 0.6,
   primitiveHeadMaxAspect: 2.5,
-  // Plausible stem bounds in staff spaces; size normalization cannot check these.
+  // Stem bounds in staff spaces; size normalization cannot check these.
+  // The wider/slanted allowance is a development-informed guess. Linearity
+  // below checks the body, rather than treating a tilted straight stem as wide.
   primitiveStemMinHeight: 1.5,
   primitiveStemMaxHeight: 5,
-  primitiveStemMaxWidth: 0.6,
-  // Dimensionless stem width/height ceiling and endpoint/path-length floor.
-  primitiveStemMaxAspect: 0.25,
-  primitiveStemMinStraightness: 0.85,
+  primitiveStemMaxWidth: 1.8,
+  // Dimensionless width/height ceiling (roughly a 33-degree straight slant).
+  primitiveStemMaxAspect: 0.65,
+  // Minor/major covariance eigenvalue ceiling on the derived 32-point cloud.
+  // A guessed line-fit tolerance: permits observed jitter/retracing, rejects
+  // bends/loops. It is not raw endpoint/path-length "straightness" or confidence.
+  primitiveStemMaxLinearityRatio: 0.02,
   // Initially support single-stroke stems only; multi-stroke groups remain ink
   // until reviewed examples justify a less restrictive rule.
   primitiveStemMaxStrokes: 1,

@@ -36,12 +36,13 @@ Human-facing stroke numbers are converted to original string IDs at export. The 
 
 ## Current inventory and accuracy
 
-`synthetic/` contains **three hand-authored smoke tests plus a classifier boundary suite**, not real handwriting:
+`synthetic/` contains **three hand-authored smoke tests and two classifier suites**, not real handwriting:
 
 - Filled head + stem, with an expected C4 quarter note.
 - Hollow head + stem, with an expected E4 half note.
 - An ambiguous/unsupported mark that stays unknown, including interrupted ink and decreasing timestamps.
-- `classifier-boundaries.json`: 12 groups checking experimental size/aspect, raw-path, multi-stroke, and interruption gates. Eleven have known intended labels that the initial conservative policy rejects, plus an unsupported tap. Intended labels are retained; safe rejection is **not** counted as correct recognition of a known label.
+- `classifier-boundaries.json`: 12 groups checking experimental size/aspect, multi-stroke, and interruption gates. The original policy rejected all eleven intended known labels; the candidate now accepts its wide/slanted/retraced stems. Labels are unchanged; rejection is **not** counted as correct recognition of a known label.
+- `classifier-linearity.json`: retraced/slanted stems plus four unsupported bent, looped, zigzag, and over-slanted marks, exercising covariance-linearity and stem bounds.
 
 `recorded/quarter-e4.json` is the first real Pencil fixture, exported by the user and retained byte-for-byte. Its original name is `Quarter-e4`, set `personal`, provenance `recorded`. It contains two complete strokes (1,091 head samples and 344 stem samples), manually labeled `noteheadFilled` and `stem`. Its head lies near the bottom staff line (E4), but `expected.events` is empty: this is **primitive-only ground truth**, not yet an assertion of an E4 quarter-note event. No event annotation has been inferred from the filename. The raw ink includes 331 timestamp decreases, preserved unchanged.
 
@@ -50,47 +51,53 @@ Human-facing stroke numbers are converted to original string IDs at export. The 
 | synthetic-smoke | synthetic | 3 | noteheadFilled: 1; noteheadHollow: 1; stem: 2; unknown: 1 |
 | personal | recorded | 1 | noteheadFilled: 1; stem: 1 |
 | classifier-boundaries | synthetic | 1 | noteheadHollow: 4; stem: 7; unknown: 1 |
+| classifier-linearity | synthetic | 1 | stem: 2; unknown: 4 |
 | Pencil-template-dev-1 | recorded | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5 |
-| Pencil-eval-session-2 | recorded, reserved evaluation | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5; unknown: 5 |
+| Pencil-eval-session-2 | recorded, frozen evaluation | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5; unknown: 5 |
 
-Total: 7 files, with expected primitive counts `noteheadFilled: 12`, `noteheadHollow: 15`, `stem: 20`, `unknown: 7`. Inventory counts include the reserved evaluation file; classification reports do not.
+Total: 8 files, with expected primitive counts `noteheadFilled: 12`, `noteheadHollow: 15`, `stem: 22`, `unknown: 11`. Inventory counts include evaluation; automatic classification reports do not score it.
 
-**Held-out recognition accuracy: N/A → N/A.** Schema validation still proves only source-reference integrity and lossless serialization. Separately, the first experimental classifier report evaluates **oracle/manual groups**, not automatically recognized notes. It prints per-set/provenance confusion cells, exact label agreement, acceptance coverage, wrong accepts, rejected known labels, and unknown rejection. It is a development regression baseline, not a held-out benchmark. Existing annotations and original files are unchanged.
+Schema validation proves only source-reference integrity and lossless serialization. Separately, the experimental classifier report evaluates **oracle/manual groups**, not automatically recognized notes. A frozen session-evaluation command is opt-in and separate from these development/regression results. It prints per-set/provenance confusion cells, exact label agreement, acceptance coverage, wrong accepts, rejected known labels, and unknown rejection. It is a development regression baseline, not a held-out benchmark. Existing annotations and original files are unchanged.
 
-| Development set | Before label decisions | Current exact agreement | Accepted | Wrong accepts | Known rejects |
-| --- | --- | ---: | ---: | ---: | ---: |
-| synthetic-smoke | N/A | 3/5 | 2/5 | 0 | 2 |
-| personal (recorded) | N/A | 0/2 | 0/2 | 0 | 2 |
-| classifier-boundaries | new safety cases | 1/12 | 0/12 | 0 | 11 |
+| Regression set | Previous agreement | Candidate agreement | Accepted | Wrong accepts | Known rejects |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| synthetic-smoke | 3/5 | 4/5 | 3/5 | 0 | 1 |
+| personal (recorded) | 0/2 | 1/2 | 1/2 | 0 | 1 |
+| classifier-boundaries | 1/12 | 4/12 | 3/12 | 0 | 8 |
+| classifier-linearity | new cases | 6/6 | 2/6 | 0 | 0 |
 
-The smoke stems pass. Its filled/hollow heads fail distance/margin respectively; its interrupted unknown is rejected. Both real Pencil primitives are rejected (head: distance; stem: geometry). The boundary fixture intentionally exercises rejection, but its 11 known-label misses are still reported honestly. Do not average these sets together or infer general safety from zero wrong accepts in a tiny collection. The classifier remains disconnected from the canvas. See [the recognition design](../docs/recognition.md).
+The smoke stems and hollow head now pass; its filled head still fails distance and its interrupted unknown is rejected. The original real Pencil stem now passes while its filled head still fails distance. The boundary suite's three newly supported stems retain their original intended labels; its eight remaining known-label misses are still reported honestly. Do not average these sets together or infer general safety from zero wrong accepts in a tiny collection. The classifier remains disconnected from the canvas. See [the recognition design](../docs/recognition.md).
 
-## Development and reserved evaluation recordings
+## Development and frozen evaluation recordings
 
 The user authorized repository distribution of these corrected exports. They are copied byte-for-byte, with original names, sets, labels, raw samples, and CRLF endings retained:
 
 | Original export | Repository path | Role | Annotation inventory |
 | --- | --- | --- | --- |
 | `Dev.json` | `recorded/development/pencil-dev-1.json` | Development | 15 one-stroke primitives, five of each supported label |
-| `Evals.json` | `recorded/evaluation/pencil-eval-1.json` | Reserved evaluation | 20 one-stroke primitives, five of each supported label plus five unknowns |
+| `Evals.json` | `recorded/evaluation/pencil-eval-1.json` | Evaluation (first frozen candidate scored) | 20 one-stroke primitives, five of each supported label plus five unknowns |
 
 Both have empty expected-event lists and blank notes. The earlier, incorrectly grouped exports are **not** imported. Tests pin the new originals' SHA-256 hashes:
 
 - Development: `15ec56101a055df9280e8e03bb50b4414b50c09316a0ce50629dcd0de60736b9`
 - Evaluation: `53abc2f6face9427fa206f39e6867199583eabc866cc0203c3908df000f87f2c`
 
-`tests/fixtures/roles.ts` explicitly assigns every repository fixture to `regression`, `development`, or `evaluation`. New files need a deliberate assignment. All files are schema-validated, inventoried, and round-tripped. The existing classifier regression report selects only the five regression files. The development template adapter rejects regression/evaluation sources; its leave-one-group-out diagnostic removes the query's own template and does not silently add synthetic seeds. Duplicate recordings/source IDs are rejected. Source IDs and exact point arrays do not overlap between the two new exports; this checks simple copying, not independent proof of session separation or dataset adequacy.
+`tests/fixtures/roles.ts` explicitly assigns every repository fixture to `regression`, `development`, or `evaluation`. New files need a deliberate assignment. All files are schema-validated, inventoried, and round-tripped. The automatic classifier regression report selects only the six regression files. The development template adapter rejects regression/evaluation sources; its leave-one-group-out diagnostic removes the query's own template and does not silently add synthetic seeds. Duplicate recordings/source IDs are rejected. Source IDs and exact point arrays do not overlap between the two new exports; this checks simple copying, not independent proof of session separation or dataset adequacy.
 
-### Initial development diagnostics — no classifier changes
+### Development diagnostics and candidate policy
 
-| Experiment on the development export | Exact agreement | Accepted | Rejection details |
+| Development experiment | Previous exact agreement | Candidate agreement/acceptance | Candidate details |
 | --- | ---: | ---: | --- |
-| Existing synthetic seed bank | 3/15 | 3/15 | Filled: 2/5 accepted, 3 distance rejects; hollow: 1/5 accepted, 2 distance and 2 margin rejects; stems: 5 geometry rejects |
-| Leave-one-group-out development templates | 0/15 | 0/15 | Filled: 5 margin rejects; hollow: 5 margin rejects; stems: 5 geometry rejects |
+| Synthetic seed bank | 3/15 | 9/15 | Filled: 2/5; hollow: 3/5; stems: 4/5; six distance rejects |
+| Leave-one-group-out development templates | 0/15 | 13/15 | Filled: 3/5; hollow: 5/5; stems: 5/5; two ambiguous filled heads remain unknown |
 
-These are **different development experiments**, not a before/after replacement of the production bank. Both use unchanged classifier settings and have zero wrong accepts in this small collection. Leave-one-group-out uses other samples from the same recording, so it is not session-held-out accuracy. No self-match is counted as recognition success. Existing regression results are unchanged.
+These are **different template-bank experiments**, not a replacement of the synthetic runtime bank. Both have zero wrong accepts on this small positive-only development collection, which does not calibrate negative-rejection safety. Same-recording leave-one-group-out was used for development decisions and is not session-held-out accuracy. No self-match is counted as success. The raw exports and all original labels remain unchanged; **no redrawing is needed**.
 
-The new data exposes shortcomings in the current margin/shape and stem geometry policy; **the corrected exports do not need redrawing**. No thresholds, runtime templates, or canvas behavior are changed by their import. Keep the evaluation session reserved while improving the classifier using development data. Freeze template/feature/policy choices before running its first recognition evaluation. Its annotation inventory, schema, source overlap, and byte preservation have been checked, but no classification scores have been computed for it. Do not consume the reserved unknown examples as calibration negatives.
+The candidate replaces raw endpoint/travel straightness with a minor/major covariance ratio on derived clouds, permits observed slant, and lowers the top-two margin from 0.4 to 0.1 while retaining the 1.5 distance cutoff. Its full policy and source hashes are frozen before recognition evaluation in `tests/evaluation/frozen-pencil-v1.ts`. See [the design and caveats](../docs/recognition.md).
+
+Run `npm run test:recognition-eval` explicitly to evaluate the frozen 15-template development bank. The command is excluded from ordinary tests/CI, verifies model/data/runner hashes before scoring, and refuses changed sources. Do not rewrite those hashes after seeing results; use the frozen commit to reproduce that experiment. At freeze time the evaluation recording has only schema/annotation/integrity/overlap checks, not recognition results, and its five unknowns are not calibration negatives. After the first evaluation, tuning against its results would require new independent data to claim fresh held-out accuracy.
+
+The first recognition evaluation has now been run after committing freeze `558fa7d`: **10/15 known symbols correctly accepted, five known symbols rejected, all 5/5 unknown marks rejected, zero wrong accepted labels in this small collection**. Overall exact label/rejection agreement is 15/20; this is not full-pipeline or population accuracy. No predictor changes followed the result. See [the frozen result and reproduction protocol](../docs/recognition-evaluations/pencil-v1.md). This collection is now observed, not an unseen reserve for future tuning.
 
 ## Collecting additional recordings
 
