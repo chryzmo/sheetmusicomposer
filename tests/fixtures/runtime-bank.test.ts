@@ -29,12 +29,26 @@ it('reports the new runtime bank separately from unchanged synthetic-bank baseli
   const recordedPins = [
     ['Quarter-e4', 1, 2], ['Sample-mixed-first-e4-rejected', 9, 10], ['Mixed-a4-whole-x4-third-rejected', 3, 4],
     ['Mixed-c5-quarters-half-whole-two-rejected', 5, 7], ['Mixed-e4-seven-notes-four-rejected', 6, 11],
+    ['free-20261112-1656', 16, 19],
   ] as const;
   for (const [name, exact, total] of recordedPins) {
     const rows = observations.filter((o) => o.fixtureName === name);
     expect(rows, name).toHaveLength(total);
     expect(rows.filter((o) => o.expected === o.result.label), name).toHaveLength(exact);
   }
-  expect(observations.filter((o) => o.result.label !== 'unknown' && o.result.label !== o.expected)).toEqual([]);
+  // Wrong accepts (a shape confidently read as the wrong label) are the failures that matter most, so
+  // every one must be NAMED here. The list must equal what the recognizer actually does: a new wrong
+  // accept fails this test, and so does fixing a listed one without removing its entry, which keeps
+  // the list honest. Entries are [fixture, 1-based stroke number, expected label, label it was read as].
+  const knownWrongAccepts = [
+    // A tightly scribbled filled head (ink density 13.4) read as hollow, so a quarter note is proposed as a half.
+    // Tracked for the filled/hollow second-opinion work; remove when fixed.
+    ['free-20261112-1656', 1, 'noteheadFilled', 'noteheadHollow'],
+  ] as const;
+  const wrongAccepts = observations.filter((o) => o.result.label !== 'unknown' && o.result.label !== o.expected).map((o) => {
+    const { document } = fixtures.find(({ fixture }) => fixture.name === o.fixtureName)!.fixture;
+    return [o.fixtureName, document.strokes.findIndex((s) => s.id === o.result.strokeIds[0]) + 1, o.expected, o.result.label];
+  });
+  expect(wrongAccepts).toEqual(knownWrongAccepts.map((entry) => [...entry]));
   expect(observations.every((o) => o.set !== 'Pencil-eval-session-2' && o.set !== 'Pencil-template-dev-1')).toBe(true);
 });

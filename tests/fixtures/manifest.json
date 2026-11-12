@@ -20,6 +20,10 @@
     "recorded/evaluation/pencil-eval-1.json": {
       "role": "evaluation"
     },
+    "recorded/free-20261112-1656.json": {
+      "role": "regression",
+      "session": "session-free-round-2"
+    },
     "recorded/quarter-e4.json": {
       "role": "regression",
       "session": "session-quarter-e4"

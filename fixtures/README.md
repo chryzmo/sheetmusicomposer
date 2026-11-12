@@ -30,6 +30,7 @@ The command validates each file with the real fixture decoder, copies it **byte 
 - **`--session` is required** and names the sitting: measures written in one go share an id; an unrelated sitting gets a new one. When unsure, reuse the earlier id (coarser only makes held-out evaluation stricter). The error lists the existing sessions.
 - Imports are always recorded **regression** fixtures. Development fixtures feed the built-in template bank and the evaluation fixture is reserved, so they are never imported by a flag; they need a reviewed change to the manifest and the pinned hashes.
 - Existing recorded results are pinned **per fixture** in `tests/fixtures/runtime-bank.test.ts`; a new fixture needs no edit there, but add its name to lock in its result once you have looked at it.
+- **If a new fixture exposes a wrong accept** (a shape confidently read as the wrong label), the fixture suite fails on purpose: that is the failure that matters most. Do not loosen the rule. Name it in the `knownWrongAccepts` list in `tests/fixtures/runtime-bank.test.ts` with a comment saying why, and pin any wrong *note* in `review.test.ts`. The list must equal what the recognizer actually does, so fixing the bug makes the test fail until the entry is removed.
 
 ```sh
 npm run test:fixtures   # validation/round-trips, inventory, development classifier report
