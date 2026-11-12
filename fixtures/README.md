@@ -59,10 +59,13 @@ Grouping tests pass raw synthetic strokes plus an explicitly authored observatio
 | classifier-linearity | synthetic | 1 | stem: 2; unknown: 4 |
 | simple-note-assembly | synthetic | 1 | noteheadFilled: 3; noteheadHollow: 6; stem: 6; unknown: 1 |
 | primitive-grouping | synthetic | 1 | noteheadFilled: 1; noteheadHollow: 4; stem: 1; dot: 1; unknown: 2 |
+| runtime-review-self-derived | synthetic, template-derived | 1 | noteheadFilled: 1; noteheadHollow: 1; stem: 1; unknown: 1 |
 | Pencil-template-dev-1 | recorded | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5 |
 | Pencil-eval-session-2 | recorded, frozen evaluation | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5; unknown: 5 |
 
-Total: 10 files, with expected primitive counts `noteheadFilled: 16`, `noteheadHollow: 25`, `stem: 29`, `dot: 1`, `unknown: 14`. Inventory counts include evaluation; automatic classification reports do not score it.
+- `runtime-review.json`: **synthetic template-derived/self-similar** review regression (quarter E4 + whole E4 + unsupported tap), not independent handwriting. Deliberately decreasing sample times and an overfull measure exercise raw preservation/explicit review, not native timing or duration resolution. See [runtime bank/review evidence](../docs/runtime-review.md).
+
+Total: 11 files, with expected primitive counts `noteheadFilled: 17`, `noteheadHollow: 26`, `stem: 30`, `dot: 1`, `unknown: 15`. Inventory counts include evaluation; automatic classification reports do not score it.
 
 Schema validation proves only source-reference integrity and lossless serialization. Separately, the experimental classifier report evaluates **oracle/manual groups**, not automatically recognized notes. The assembly suite separately uses explicit synthetic event truth and oracle primitive labels; it never treats empty event lists on real primitive-only recordings as an assertion of no notes. A frozen session-evaluation command is opt-in and separate from these development/regression results. It prints per-set/provenance confusion cells, exact label agreement, acceptance coverage, wrong accepts, rejected known labels, and unknown rejection. It is a development regression baseline, not a held-out benchmark. Existing annotations and original files are unchanged.
 
@@ -74,6 +77,9 @@ Schema validation proves only source-reference integrity and lossless serializat
 | classifier-linearity | new cases | 6/6 | 2/6 | 0 | 0 |
 | simple-note-assembly | existing cases | 15/16 | 14/16 | 0 | 1 |
 | primitive-grouping | new cases | 7/9 | 5/9 | 0 | 2 |
+| runtime-review-self-derived | new self-similar cases | 4/4 | 3/4 | 0 | 0 |
+
+This historical candidate table uses the unchanged **synthetic reference bank**. New named runtime-bank diagnostics are reported separately in [runtime review](../docs/runtime-review.md), including its lower coverage on grouping/smoke cases. Neither protocol is independent handwriting accuracy.
 
 The smoke stems and hollow head now pass; its filled head still fails distance and its interrupted unknown is rejected. The original real Pencil stem now passes while its filled head still fails distance. The boundary suite's three newly supported stems retain their original intended labels; its eight remaining known-label misses are still reported honestly. Do not average these sets together or infer general safety from zero wrong accepts in a tiny collection. The classifier remains disconnected from the canvas. See [the recognition design](../docs/recognition.md).
 

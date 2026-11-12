@@ -30,6 +30,7 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run test:fixtures
+      - run: node scripts/build-runtime-bank.mjs --check
       - run: npm run build
       - name: Install WebKit and system dependencies
         timeout-minutes: 5
