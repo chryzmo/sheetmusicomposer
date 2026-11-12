@@ -1,22 +1,14 @@
 import { config } from '../config';
 import type { SketchDocument } from '../model/document';
 import type { Stroke } from '../ink/types';
-import { sampleGeometryRejections } from '../recognize/classify';
-import type { GeometryRejection } from '../recognize/classify';
 import type { SimplePrimitive } from '../recognize/primitives';
-import { decodeUserTemplateSample, encodeUserTemplateSample, userTemplateLabels, userTemplates } from '../recognize/user-templates';
+import { userTemplateLabels } from '../recognize/user-templates';
 import type { UserTemplateSample } from '../recognize/user-templates';
 import { errorMessage } from '../store/autosave';
+import { attachGuidedTraining } from './guided';
+import { labelNames, sampleProblem } from './validate';
 import type { LoadedTemplates, TemplateRepository } from '../store/template-store';
 
-const labelNames: Readonly<Record<SimplePrimitive, string>> = {
-  noteheadFilled: 'Filled notehead', noteheadHollow: 'Hollow notehead', stem: 'Stem',
-};
-const problemText: Readonly<Record<GeometryRejection, string>> = {
-  'head-size': 'Too small or too large for a notehead.', 'head-aspect': 'Too narrow or too flat for a notehead.',
-  'stem-size': 'Too short or too long for a stem.', 'stem-aspect': 'Too slanted for a stem.',
-  'stem-strokes': 'A stem must be one stroke.', 'stem-linearity': 'Not straight enough for a stem.',
-};
 const ns = 'http://www.w3.org/2000/svg';
 
 /** Small outline of one sample's strokes, scaled to its own bounds. */
@@ -57,6 +49,8 @@ export function attachTemplateTraining(
       (for example 5 filled noteheads, 5 hollow noteheads, and 5 stems), then open this screen and choose a shape for each stroke.
       Use <strong>New</strong> first so training marks do not mix with a sketch. Strokes you leave on Skip are ignored.</p>
     <p><strong>Saved samples are stored only on this device and are used by Review notes together with the built-in samples.</strong> Clearing website data deletes them.</p>
+    <p><button type="button" id="training-guided">Start guided training</button>
+      The app tells you what to draw and labels each stroke from the prompt, so there is nothing to label afterwards.</p>
     <output id="training-status" role="status"></output>
     <h3>Saved samples</h3>
     <p id="training-counts"></p>
@@ -66,7 +60,7 @@ export function attachTemplateTraining(
       <details><summary>Reasons</summary><ul id="training-damaged-reasons"></ul></details>
     </div>
     <div class="tools"><button type="button" id="training-clear">Delete all personal samples</button></div>
-    <h3>Add from the current page</h3>
+    <h3>Or label strokes already on the page</h3>
     <p id="training-help"></p>
     <ol id="training-rows" class="training-list" aria-label="Strokes on the current page"></ol>
     <div class="tools training-actions">
@@ -98,25 +92,12 @@ export function attachTemplateTraining(
       select: item.querySelector<HTMLSelectElement>('select')!, problem: item.querySelector<HTMLElement>('.training-problem')!, stroke: frozen.strokes[i]!,
     }));
 
-  /** Problems that would stop one stroke from being saved as `label`, in plain words. */
-  function problemFor(stroke: Stroke, label: SimplePrimitive): string {
-    try {
-      decodeUserTemplateSample(encodeUserTemplateSample({ id: 'check', label, createdAt: 0, strokes: [stroke] }));
-      userTemplates([{ id: 'check', label, createdAt: 0, strokes: [stroke] }]);
-      const rejections = sampleGeometryRejections(label, [stroke]);
-      return rejections.length === 0 ? '' : `Not saved: ${rejections.map((r) => problemText[r]).join(' ')}`;
-    } catch (error) {
-      const message = errorMessage(error);
-      return message.includes('complete') ? 'Not saved: this stroke was interrupted. Draw it again.' : `Not saved: ${message}.`;
-    }
-  }
-
   function refreshRows(): void {
     const chosen = new Map<SimplePrimitive, number>();
     for (const { select, problem, stroke } of selectedRows()) {
       const label = userTemplateLabels.find((l) => l === select.value);
       if (!label) { problem.textContent = ''; continue; }
-      let text = problemFor(stroke, label);
+      let text = sampleProblem(stroke, label);
       const total = perLabel(label) + (chosen.get(label) ?? 0) + 1;
       if (!text && total > config.maxUserTemplatesPerLabel) text = `Not saved: at most ${config.maxUserTemplatesPerLabel} samples per shape. Delete one first.`;
       if (!text) chosen.set(label, (chosen.get(label) ?? 0) + 1);
@@ -198,6 +179,10 @@ export function attachTemplateTraining(
     });
   }
 
+  const guided = attachGuidedTraining(repository, () => { if (repository && dialog.open) void reload().catch((error: unknown) => { status.textContent = `Could not read personal templates: ${errorMessage(error)}`; }); }, signal);
+  const guidedButton = get<HTMLButtonElement>('#training-guided');
+  guidedButton.disabled = repository === null;
+  listen(guidedButton, guided.open);
   listen(get('#training-close'), () => dialog.close());
   listen(saveButton, () => {
     const now = Date.now();

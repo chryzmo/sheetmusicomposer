@@ -33,6 +33,17 @@ A throwaway experiment (not committed) added the other recorded files' primitive
 - **Damaged records** are ignored and listed with their reason, and can be removed with one button.
 - **Not included yet:** exporting/importing templates (website data can be cleared, which deletes them), a dedicated training canvas separate from the sketch, and multi-stroke samples. Backups of sketches do not include templates.
 
+## Guided shape trainer
+
+The Personal templates screen has **Start guided training**: the app names what to draw, labels each stroke from the prompt, and saves it as a sample, so nothing is annotated afterwards (the earlier screen still exists for labeling strokes already on the page).
+
+- **Prompts** (`src/training/script.ts`) rotate filled head, hollow head, stem, so the hand switches shapes as it does when writing music, 8 per shape per round. Each prompt carries a hint that varies size, speed, stroke direction, slant, and position (on a line, in a space, above or below the staff). The aim is for training data to support **free sketching of your own music**, not only careful copying. A later round shifts the hints.
+- **Own canvas:** strokes go on the trainer's own staff (a second instance of the same ink surface, with the same Pencil and palm handling), never the sketch.
+- **Rules are the training screen's** (`src/training/validate.ts`): a complete single stroke that passes the prompted shape's own geometry gates. A stroke that fails is **not saved, its ink is removed, the prompt repeats, and the reason is shown**. Saving is one sample at a time.
+- **Controls:** Undo last (removes the sample and returns to its prompt), Skip this prompt, Clear drawing area (keeps saved samples), Another round, Done. A shape already at its limit is skipped automatically.
+- **Labels are the prompt, i.e. what you were asked to draw.** They are never recognizer output. A mislabeled sample (you drew a hollow head for a filled prompt) is not detected beyond the shape gates, so keep to the prompt.
+- **Not included yet:** copying whole measures, tap-to-label annotation for free-drawn test measures, and session export/import. The plan is in the project notes: test measures should be free-drawn, since that is how the app will be used.
+
 ## Using personal samples in review (PR 3)
 
 - **When read:** at each **Review notes** tap, the main thread reads the stored samples fresh (so multi-tab changes are seen), shows the bank, and sends the validated samples to the worker. The worker builds the merged bank and prepares the clouds off the ink-render thread.
