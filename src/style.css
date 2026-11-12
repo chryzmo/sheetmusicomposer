@@ -100,6 +100,10 @@ button:focus-visible { outline: 3px solid #2c7663; outline-offset: 3px; }
 #review-duration[data-state='under'], #review-duration[data-state='over'] { padding: 0.4rem 0.6rem; border-left: 4px solid #b27a00; background: #fff4d6; font-weight: 600; }
 #review-duration[data-state='over'] { border-left-color: #b12e21; background: #fde8e4; }
 .review-actions { position: sticky; top: 0; z-index: 1; padding: 0.5rem 0; background: #fffef9; border-bottom: 1px solid #d4d6cb; }
+.guided-prompt { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.25rem; }
+.guided-workspace { position: relative; height: 13rem; overflow: hidden; background: #fffef9; border: 1px solid #d4d6cb; border-radius: 0.75rem; }
+#guided-status { display: block; margin: 0.75rem 0 0; min-height: 2.6em; }
+.guided-actions { margin-top: 0.5rem; }
 .training-list { list-style: none; margin: 0 0 1rem; padding: 0; }
 .training-item { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-top: 1px solid #d4d6cb; }
 .training-item label { flex-direction: row; align-items: center; flex-wrap: wrap; }

@@ -102,12 +102,19 @@ See [review workflow/architecture/limits](notation-review.md). No native accepta
 
 New in this change. Automated WebKit tests use synthetic pointer events, so Pencil feel, layout, and real iPad storage behavior need hand checks. Saved samples are also used by Review notes (next section).
 
-- Download a backup, then tap **New**. Draw about 5 filled noteheads, 5 hollow noteheads, and 5 stems as single strokes, at your normal writing size, spaced apart on the staff.
-- Tap **Personal templates**. The dialog should list one row per stroke with a small thumbnail and a shape menu set to **Skip**. Check scrolling and that Close and Save stay reachable in portrait and landscape.
+- Tap **Personal templates** then **Start guided training** (the quickest route; see the guided checks below). Or, for the manual route: download a backup, tap **New**, draw about 5 filled noteheads, 5 hollow noteheads, and 5 stems as single strokes at your normal writing size, then tap **Personal templates**. The dialog should list one row per stroke with a small thumbnail and a shape menu set to **Skip**. Check scrolling and that Close and Save stay reachable in portrait and landscape.
 - Choose a shape for every stroke and save. Counts should update and the saved list should show recognizable thumbnails. Strokes you saved reset to Skip. Reopen the screen after closing: nothing should save twice.
 - Deliberately label a stem as a head, a tiny dot as a head, and a head as a stem. Each should be refused with a plain reason, without blocking the correct strokes.
 - Reload the page, then reopen the screen: saved samples and counts should remain. Delete one sample, then use **Delete all personal samples** (it should ask first). The sketch itself must stay unchanged throughout.
 - Rapid strokes, palm rejection, navigation, undo/redo, backup/restore, and autosave should still work with the new toolbar button. Record the iPad/OS/Pencil and any stroke that is refused unexpectedly, with a screenshot.
+
+### Guided training checks
+
+- Open **Personal templates** and tap **Start guided training**. The prompt names the shape and a hint; the staff area below should accept Pencil strokes with the usual palm handling, and the sketch behind the dialog must not change.
+- Draw about 8 of each shape, following the hints (small, large, quick, high, low, up and down strokes, slanted stems). After each stroke the status should say what was saved and the prompt should advance.
+- Draw something wrong on purpose (a tiny dot for a notehead): it should not be saved, its ink should disappear, and the same prompt should repeat with a reason.
+- Try **Undo last**, **Skip this prompt**, **Clear drawing area**, and **Another round**. Check the saved counts, and that **Done** returns to a saved list that includes the new samples.
+- Note any stroke that was refused that you think was fine (and which prompt), any prompt that is hard to follow, and how it feels to use the staff area at its size (portrait and landscape).
 
 ## Review with personal samples — pending native acceptance
 
