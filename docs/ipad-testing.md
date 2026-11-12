@@ -100,15 +100,26 @@ See [review workflow/architecture/limits](notation-review.md). No native accepta
 
 ## Personal templates (training screen) — pending native acceptance
 
-New in this change. Automated WebKit tests use synthetic pointer events, so Pencil feel, layout, and real iPad storage behavior need hand checks. Saved samples are **not used by Review notes yet**; this section only checks capture, storage, and the screen.
+New in this change. Automated WebKit tests use synthetic pointer events, so Pencil feel, layout, and real iPad storage behavior need hand checks. Saved samples are also used by Review notes (next section).
 
 - Download a backup, then tap **New**. Draw about 5 filled noteheads, 5 hollow noteheads, and 5 stems as single strokes, at your normal writing size, spaced apart on the staff.
 - Tap **Personal templates**. The dialog should list one row per stroke with a small thumbnail and a shape menu set to **Skip**. Check scrolling and that Close and Save stay reachable in portrait and landscape.
 - Choose a shape for every stroke and save. Counts should update and the saved list should show recognizable thumbnails. Strokes you saved reset to Skip. Reopen the screen after closing: nothing should save twice.
 - Deliberately label a stem as a head, a tiny dot as a head, and a head as a stem. Each should be refused with a plain reason, without blocking the correct strokes.
 - Reload the page, then reopen the screen: saved samples and counts should remain. Delete one sample, then use **Delete all personal samples** (it should ask first). The sketch itself must stay unchanged throughout.
-- After training, check Review notes still behaves exactly as before (no change is expected).
 - Rapid strokes, palm rejection, navigation, undo/redo, backup/restore, and autosave should still work with the new toolbar button. Record the iPad/OS/Pencil and any stroke that is refused unexpectedly, with a screenshot.
+
+## Review with personal samples — pending native acceptance
+
+Review notes now reads your trained samples. Automated tests use synthetic ink, so whether your samples actually improve recognition has to be judged on the iPad.
+
+- With no personal samples, Review notes should look and behave as before; the bank line reads `pencil-dev-v1` with no personal samples.
+- Train a small set (about 5 of each shape), then draw measures you know failed before, for example filled heads that were rejected, and tap **Review notes**. The bank line should read `pencil-dev-v1+user-N-…` with your sample count. Compare which notes are now proposed, and record any that are **wrong** (a wrong proposal matters more than a miss).
+- Proposals whose closest match was one of your samples show a note; open the matching diagnostics and check the template IDs and `builtin`/`user` source make sense.
+- Open a review, then change your samples in a second tab and return: Keep should refuse with a message and keep nothing. Review again and confirm the new bank.
+- Delete all personal samples and review again: the bank returns to built-in only, with the same proposals as before training.
+- First-review latency with many samples (30 per shape is the limit): note whether opening the review feels slower.
+- Record fixtures of any new wrong proposals or surprising misses, for the evaluation step.
 
 ## Known limitations
 

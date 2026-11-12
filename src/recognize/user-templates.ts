@@ -131,9 +131,20 @@ export function mergeTemplateBank(builtin: RuntimeBank, samples: readonly UserTe
     if (ids.has(id)) throw new Error('Duplicate personal template ID');
     ids.add(id);
   }
-  const ordered = [...samples].sort((a, b) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const identity = ordered.length === 0 ? builtin.id
-    : `${builtin.id}+user-${ordered.length}-${fnv1a(ordered.map(({ id, label, createdAt }) => `${id}|${label}|${createdAt}`).join('\n'))}`;
-  return { id: identity, builtinId: builtin.id, userSampleIds: ordered.map(({ id }) => id),
+  const ordered = [...samples].sort(compareSamples);
+  return { id: templateBankIdentity(builtin.id, ordered), builtinId: builtin.id, userSampleIds: ordered.map(({ id }) => id),
     templates: [...builtin.templates, ...userTemplates(ordered)] };
+}
+
+const compareSamples = (a: Pick<UserTemplateSample, 'id' | 'createdAt'>, b: Pick<UserTemplateSample, 'id' | 'createdAt'>): number =>
+  a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+
+/** The bank identity for a set of samples, without building any clouds, so the
+ * main thread can cheaply check that a finished review still matches storage.
+ * Equals the built-in ID alone when there are no samples.
+ */
+export function templateBankIdentity(builtinId: string, samples: readonly Pick<UserTemplateSample, 'id' | 'label' | 'createdAt'>[]): string {
+  if (samples.length === 0) return builtinId;
+  const ordered = [...samples].sort(compareSamples);
+  return `${builtinId}+user-${ordered.length}-${fnv1a(ordered.map(({ id, label, createdAt }) => `${id}|${label}|${createdAt}`).join('\n'))}`;
 }

@@ -4,6 +4,7 @@ import type { Page } from '@playwright/test';
 import { config } from '../../src/config';
 import { parseFixture } from '../../src/fixtures/schema';
 import type { SketchDocument } from '../../src/model/document';
+import { databaseName } from '../../src/store/indexeddb';
 import { parseBackup, serializeBackup } from '../../src/store/schema';
 import { expectSaved, expectStrokes, openSketch, pointer } from './ink-helpers';
 
@@ -305,4 +306,95 @@ test('review duration line distinguishes empty from underfull selections', async
   await expect(page.locator('#review-duration')).toHaveAttribute('data-state', 'under');
   await expect(page.locator('#review-duration')).toContainText('Underfull: 1 of 4 quarter-note units in 4/4; 3 quarter-note units short.');
   await cancel(page).click();
+});
+
+// Personal templates (milestone 7, PR 3). Samples are trained through the real
+// training screen from the uploaded ink itself, so the match provenance is deterministic.
+async function trainFromPage(page: Page, labels: Record<number, string>): Promise<void> {
+  await page.getByRole('button', { name: 'Personal templates', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Personal templates' });
+  await expect(dialog).toBeVisible();
+  for (const [stroke, label] of Object.entries(labels)) await dialog.getByLabel(new RegExp(`^Stroke ${stroke} `)).selectOption(label);
+  await expect(dialog.locator('.training-problem')).toHaveText(['', '', '', '']);
+  await dialog.getByRole('button', { name: 'Save labeled samples' }).click();
+  await expect(dialog.locator('#training-status')).toContainText(`Saved ${Object.keys(labels).length} samples.`);
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  await expect(dialog).not.toBeVisible();
+}
+const trained = { 1: 'noteheadFilled', 2: 'stem', 3: 'noteheadHollow' };
+
+test('review uses personal samples, shows the merged bank, and marks personal matches', async ({ page }) => {
+  await openSketch(page); await upload(page);
+  await review(page);
+  await expect(page.locator('#review-bank')).toContainText('no personal samples');
+  await expect(page.locator('.review-personal')).toHaveCount(0);
+  await cancel(page).click();
+  await trainFromPage(page, trained);
+  const before = await backup(page);
+  await review(page);
+  await expect(page.locator('#review-bank')).toContainText('pencil-dev-v1+user-3-');
+  await expect(page.locator('#review-bank')).toContainText('15 built-in samples plus 3 personal samples');
+  await expect(page.locator('.review-personal')).toHaveCount(2);
+  await expect(page.locator('.review-personal').first()).toContainText('Closest match was one of your personal samples.');
+  await page.getByText('Matching diagnostics (not probabilities)').first().click();
+  await expect(page.locator('#note-review pre').first()).toContainText('user/');
+  await page.getByRole('checkbox', { name: /Note 1: E4, quarter/ }).check();
+  await keep(page).click(); await expectSaved(page);
+  const after = await backup(page);
+  expect(after.strokes).toEqual(before.strokes);
+  expect(after.measures?.[0]?.events.map((e) => e.duration)).toEqual(['quarter']);
+});
+
+test('a template change after the preview, even from another tab, refuses to keep stale proposals', async ({ page, context }) => {
+  await openSketch(page); await upload(page);
+  const before = await backup(page);
+  await review(page);
+  await expect(page.locator('#review-bank')).toContainText('no personal samples');
+  const other = await context.newPage();
+  await openSketch(other);
+  await expectStrokes(other, 4);
+  await trainFromPage(other, trained);
+  await page.getByRole('checkbox', { name: /Note 1: E4, quarter/ }).check();
+  await keep(page).click();
+  await expect(page.locator('#review-status')).toContainText('Personal templates changed since this preview');
+  await expect(keep(page)).toBeDisabled();
+  await cancel(page).click();
+  expect(await backup(page)).toEqual(before);
+  expect((await backup(page)).measures).toBeUndefined();
+  // A fresh review now uses the new samples.
+  await review(page);
+  await expect(page.locator('#review-bank')).toContainText('plus 3 personal samples');
+});
+
+test('a damaged stored template record is ignored and reported, and review still works', async ({ page }) => {
+  await openSketch(page); await upload(page);
+  await page.evaluate((name) => new Promise<void>((resolve, reject) => {
+    const request = indexedDB.open(name);
+    request.onsuccess = () => {
+      const db = request.result, tx = db.transaction('templates', 'readwrite');
+      tx.objectStore('templates').put({ format: 'something-else' }, 'broken-1');
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onabort = () => { db.close(); reject(tx.error); };
+    };
+    request.onerror = () => reject(request.error);
+  }), databaseName);
+  await review(page);
+  await expect(page.locator('#review-bank')).toContainText('1 stored template record was damaged and ignored');
+  await expect(page.locator('#review-bank')).toContainText('no personal samples');
+});
+
+test('review falls back to built-in samples, and says so, when template storage is unavailable', async ({ page }) => {
+  await openSketch(page);
+  await page.evaluate((name) => new Promise<void>((resolve, reject) => {
+    const request = indexedDB.open(name, 3);
+    request.onsuccess = () => { request.result.close(); resolve(); };
+    request.onerror = () => reject(request.error);
+  }), databaseName);
+  await page.reload();
+  await expect(page.locator('#save-status')).toContainText('Storage unavailable');
+  await page.getByLabel('Choose sketch backup').setInputFiles({ name: 'review-source.json', mimeType: 'application/json', buffer: Buffer.from(serializeBackup(source)) });
+  await expectStrokes(page, source.strokes.length);
+  await review(page);
+  await expect(page.locator('#review-bank')).toContainText('built-in samples only: personal templates are unavailable');
+  await expect(page.locator('#review-bank')).toContainText('pencil-dev-v1');
 });

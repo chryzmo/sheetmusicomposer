@@ -56,7 +56,7 @@ export function attachTemplateTraining(
     <p>Teach the app your handwriting. Draw several single-stroke examples of each shape on the staff at normal size
       (for example 5 filled noteheads, 5 hollow noteheads, and 5 stems), then open this screen and choose a shape for each stroke.
       Use <strong>New</strong> first so training marks do not mix with a sketch. Strokes you leave on Skip are ignored.</p>
-    <p><strong>Saved samples are stored only on this device and are not used by Review notes yet.</strong> Clearing website data deletes them.</p>
+    <p><strong>Saved samples are stored only on this device and are used by Review notes together with the built-in samples.</strong> Clearing website data deletes them.</p>
     <output id="training-status" role="status"></output>
     <h3>Saved samples</h3>
     <p id="training-counts"></p>
