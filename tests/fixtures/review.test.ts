@@ -169,20 +169,18 @@ it.each([
   expect([...review.assembly.unresolvedStrokeIds].sort()).toEqual(unresolved.sort());
 });
 
-// A free-drawn measure (Label measure) with ten notes: seven are proposed correctly, two are missed, and ONE is
-// proposed WRONGLY. That wrong proposal is the failure that matters most, so it is pinned explicitly rather than
-// left to a blanket rule. Fix the filled/hollow reading and update this test; do not widen it.
-it('free-20261112-1656: seven notes right, two left as ink, and one known wrong proposal', () => {
+// A free-drawn measure (Label measure) with ten notes: seven are proposed correctly and three are left as ink. It once
+// proposed ONE note wrongly (a quarter as a half, because its tightly scribbled filled head was read as hollow); the
+// ink-density veto now withholds that head, which turns the wrong note into ink. Nothing wrong is proposed.
+it('free-20261112-1656: seven notes right, three left as ink, nothing wrong', () => {
   const recorded = parseFixture(readFileSync(new URL('../../fixtures/recorded/free-20261112-1656.json', import.meta.url), 'utf8'));
   const review = prepareMusicReview(recorded.document, createRuntimeBank());
   const events = recorded.expected.events;
   const emitted = review.candidates.map(({ note }) => ({ kind: note.kind, pitch: note.pitch, duration: note.duration,
     dots: note.dots, accidental: note.accidental, strokeIds: note.strokeIds }));
-  // KNOWN WRONG: event 1 is a quarter (filled head, ink density 13.4) but its head is read as hollow, so a half note is proposed.
-  const wrongHalf = { ...events[0]!, duration: 'half' };
-  expect(events[0]).toMatchObject({ duration: 'quarter' });
-  expect(emitted).toEqual([wrongHalf, ...[3, 4, 5, 6, 7, 8, 9].map((i) => events[i])]);
-  // Events 2 and 3 (F4 and G4 quarters) are missed: their filled heads are rejected, leaving head and stem as ink.
-  const missed = new Set([1, 2].flatMap((i) => events[i]!.strokeIds));
+  expect(emitted).toEqual([3, 4, 5, 6, 7, 8, 9].map((i) => events[i]));
+  // Event 1 (E4 quarter): head withheld by the density veto. Events 2 and 3 (F4, G4 quarters): heads rejected on
+  // distance and margin. In all three the head and stem stay as visible ink.
+  const missed = new Set([0, 1, 2].flatMap((i) => events[i]!.strokeIds));
   expect([...review.assembly.unresolvedStrokeIds].sort()).toEqual([...missed].sort());
 });
