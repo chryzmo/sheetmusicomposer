@@ -50,9 +50,9 @@ export interface RestEvent extends EventBase {
 export type MusicEvent = NoteEvent | RestEvent;
 
 /** Single staff/voice. Events are in musical order, not pointer-time order.
- * These are core types only: the ink-only saved document remains version 1.
- * Validate IDs, references, dots, and confidence before future model commands
- * or persistence accept events; a TypeScript interface is not a file decoder.
+ * Ink-only documents retain file version 1; documents with measures use version 2.
+ * decodeMeasures validates IDs, references, dots, and explicit bounded confidence
+ * before commands/persistence accept events. Interfaces alone are not decoders.
  */
 export interface Measure {
   readonly id: string;

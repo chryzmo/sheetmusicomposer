@@ -214,7 +214,7 @@ export function attachInkSurface(
   return {
     newPage: () => {
       interrupt();
-      if (history.document.strokes.length > 0) {
+      if (history.document.strokes.length > 0 || history.document.measures !== undefined) {
         executeCommand(history, newPageCommand(history.document));
       }
       resize();

@@ -48,7 +48,7 @@ npm ci
 npm run test:recognition-eval
 ```
 
-Later assembly work adds settings to shared `src/config.ts` and an assignment to `tests/fixtures/roles.ts`. Both files are pinned, so the v1 guard deliberately rejects that newer checkout even though primitive policy values and the recorded first-run result are unchanged. Replay in a separate frozen worktree instead of refreshing hashes:
+Later assembly/grouping/model work adds shared configuration/fixture assignments and extends sketch/fixture decoders for musical storage. These sources are pinned, so the v1 guard deliberately rejects that newer checkout even though primitive policy values and the recorded first-run result are unchanged. Replay in a separate frozen worktree instead of refreshing hashes:
 
 ```sh
 git worktree add --detach ../sheetmusicomposer-pencil-v1 558fa7d

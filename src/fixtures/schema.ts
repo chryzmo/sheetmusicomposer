@@ -26,7 +26,8 @@ export interface InkFixture {
     readonly clef: 'treble';
     readonly timeSignature: TimeSignature;
   };
-  readonly document: SketchDocument;
+  /** Fixtures retain their v1 ink-only shape; model music is never ground truth. */
+  readonly document: Pick<SketchDocument, 'strokes'>;
   readonly expected: { readonly primitives: readonly ExpectedPrimitive[]; readonly events: readonly ExpectedEvent[] };
 }
 

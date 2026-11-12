@@ -68,6 +68,9 @@ try {
   repository = null;
 }
 
+const musicNotice = ' Musical data is preserved, but this build displays original ink only. New ink clears saved note/rest events; Undo restores them.';
+if (initialDocument.measures !== undefined) backupStatus.textContent = `Musical backup loaded.${musicNotice}`;
+
 let saveState: SaveState = { kind: 'saved' };
 let isDrawing = false;
 let lastDocument = initialDocument;
@@ -112,7 +115,7 @@ downloadButton.disabled = false;
 restoreButton.disabled = false;
 
 newButton.addEventListener('click', () => {
-  if ((isDrawing || lastDocument.strokes.length > 0) &&
+  if ((isDrawing || lastDocument.strokes.length > 0 || (lastDocument.measures?.length ?? 0) > 0) &&
       !confirm('Start a new page? This clears the current sketch. Download a backup first to keep a separate copy. You can Undo until reload.')) return;
   backupStatus.textContent = '';
   surface.newPage();
@@ -171,12 +174,12 @@ fileInput.addEventListener('change', () => {
       if (file.size > config.maxBackupBytes) throw new Error('Backup exceeds the 10 MiB import limit');
       const restored = parseBackup(await file.text());
       if (disposed) return;
-      if (lastDocument.strokes.length > 0 && !confirm('Replace the current sketch with this backup? You can Undo this restore.')) {
+      if ((lastDocument.strokes.length > 0 || (lastDocument.measures?.length ?? 0) > 0) && !confirm('Replace the current sketch with this backup? You can Undo this restore.')) {
         backupStatus.textContent = 'Restore canceled. Current sketch unchanged.';
         return;
       }
       surface.restore(restored);
-      backupStatus.textContent = 'Backup restored. Undo returns to the previous sketch.';
+      backupStatus.textContent = 'Backup restored. Undo returns to the previous sketch.' + (restored.measures === undefined ? '' : musicNotice);
     } catch (error) {
       if (!disposed) backupStatus.textContent = `Restore failed: ${errorMessage(error)}. Current sketch unchanged.`;
     } finally {

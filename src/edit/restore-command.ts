@@ -5,7 +5,13 @@ import type { Command } from './history';
 export function restoreCommand(before: SketchDocument, restored: SketchDocument): Command<SketchDocument> {
   return {
     label: 'Restore backup',
-    apply: () => restored,
-    revert: () => before,
+    apply: (document) => {
+      if (document !== before) throw new Error('Cannot restore onto a changed document');
+      return restored;
+    },
+    revert: (document) => {
+      if (document !== restored) throw new Error('Cannot undo Restore out of order');
+      return before;
+    },
   };
 }

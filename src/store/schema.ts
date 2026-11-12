@@ -1,10 +1,11 @@
 import { config } from '../config';
 import type { InkPoint, Stroke } from '../ink/types';
 import type { SketchDocument } from '../model/document';
+import { decodeMeasures } from '../model/validate-music';
 
 export interface SketchFile {
   readonly format: 'sheetmusicomposer';
-  readonly version: 1;
+  readonly version: 1 | 2;
   readonly document: SketchDocument;
 }
 
@@ -21,17 +22,20 @@ function finite(value: unknown, name: string, min = -Infinity, max = Infinity): 
 }
 
 export function sketchFile(document: SketchDocument): SketchFile {
-  return { format: 'sheetmusicomposer', version: 1, document };
+  return { format: 'sheetmusicomposer', version: document.measures === undefined ? 1 : 2, document };
 }
 
-/** Version 1 is the first schema. Future versions need explicit migrations;
- * never interpret an unknown version as empty ink and overwrite it.
+/** Explicit v1 compatibility: keep ink-only documents ink-only, with unchanged
+ * sample values/order. V2 adds validated measures; never silently strip music
+ * from a v1 envelope or downgrade an unknown version to empty ink.
  */
 export function decodeSketch(value: unknown): SketchDocument {
   const file = object(value);
   if (file.format !== 'sheetmusicomposer') throw new Error('Not a Sheet Music Composer backup');
-  if (file.version !== 1) throw new Error('Unsupported sketch version; use a compatible app version');
-  const raw = object(file.document).strokes;
+  if (file.version !== 1 && file.version !== 2) throw new Error('Unsupported sketch version; use a compatible app version');
+  const document = object(file.document);
+  if (file.version === 1 && document.measures !== undefined) throw new Error('Musical measures require sketch version 2');
+  const raw = document.strokes;
   if (!Array.isArray(raw) || raw.length > config.maxStoredStrokes) throw new Error('Invalid stroke list or too many strokes');
   const ids = new Set<string>();
   let count = 0;
@@ -59,7 +63,7 @@ export function decodeSketch(value: unknown): SketchDocument {
     });
     return { id: stroke.id, completion: stroke.completion, points };
   });
-  return { strokes };
+  return file.version === 1 ? { strokes } : { strokes, measures: decodeMeasures(document.measures, strokes) };
 }
 
 export function parseBackup(text: string): SketchDocument {

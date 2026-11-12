@@ -132,7 +132,9 @@ export function attachFixtureRecorder(
       const text = serializeFixture({
         format: 'sheetmusicomposer-fixture', version: 1, name, set: value(dialog, 'fixture-set'), notes: value(dialog, 'fixture-notes'), provenance: 'recorded',
         staff: { units: 'staff-space', lineYs: [0, 1, 2, 3, 4], width: config.staffWidth, clef: 'treble', timeSignature: value(dialog, 'time-signature') },
-        document: frozen, expected: { primitives: expectedPrimitives, events: expectedEvents },
+        // Fixture truth is entered manually; never copy saved model events or
+        // promote recognition output into expected labels. Fixtures stay v1 ink.
+        document: { strokes: frozen.strokes }, expected: { primitives: expectedPrimitives, events: expectedEvents },
       });
       const filename = name.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'recorded';
       download(text, `fixture-${filename}.json`);
