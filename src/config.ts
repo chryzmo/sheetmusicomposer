@@ -80,6 +80,9 @@ export const config = {
   // Minimum horizontal gap between head bounds, in staff spaces. Overlapping
   // columns are withheld rather than interpreted as chords/multiple voices.
   assemblyHeadColumnClearance: 0.25,
+  // Opt-in review processing cap, not an acceptance/accuracy threshold. Larger
+  // pages remain ink; never truncate a page to manufacture a smaller review.
+  reviewMaxPoints: 50000,
   // Musical document validation limits, not recognition/calibration settings.
   maxMusicMeasures: 1000,
   maxMusicIdLength: 256,

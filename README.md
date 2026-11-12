@@ -36,7 +36,9 @@ A pure **`groupStrokes()`** stage now proposes primitive groups from original st
 
 The [first frozen session evaluation](docs/recognition-evaluations/pencil-v1.md) correctly accepts 10/15 known primitives, leaves five unknown, and rejects all five supplied unknown marks, with no wrong accepted labels in this small collection. This is manually grouped, single-user evidence—not full-pipeline or population accuracy. The opt-in `npm run test:recognition-eval` checks source/data hashes before replaying that frozen development-only bank; ordinary tests/CI do not score evaluation. Added assembly/grouping configuration and fixture assignments change shared-file hashes, so replay v1 from a separate worktree at `558fa7d`, not this checkout; do not refresh its frozen hashes. Its results are now observed and cannot be reused as fresh independent evidence after tuning against them.
 
-Next: an explicit reviewed runtime template bank and candidate acceptance/evidence policy, then opt-in VexFlow rendering and a live observation/recognition coordinator. Arrival-clock persistence/clock-domain handling is not part of the score-only v2 schema.
+A [runtime-ready, named 15-template development bank and explicit review boundary](docs/runtime-review.md) now exist separately from synthetic reference seeds. It uses all approved development groups, no evaluation samples or hidden merges. Candidates retain diagnostics; a documented weakest-distance headroom heuristic is **not probability/calibrated confidence**. Only explicit reviewed selections with caller IDs can become undoable score updates; other sources stay unresolved. The experimental bank has lower authored-regression coverage on two sets, documented without tuning/relabeling. It is not imported by the current app UI yet.
+
+Next: opt-in **VexFlow review display** and deliberate selection/confirmation controls, then live observation/recognition coordination. Old ink uses explicitly marked singleton fallback when no partition is supplied—not fabricated arrival clocks or automatic fragment joins. Arrival-clock persistence/clock-domain handling is not part of score-only v2.
 
 ## Development
 
