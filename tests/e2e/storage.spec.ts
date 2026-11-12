@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { parseBackup, sketchFile } from '../../src/store/schema';
 import { databaseName } from '../../src/store/indexeddb';
+import { parseFixture } from '../../src/fixtures/schema';
+import { musicalDocument } from '../helpers/music';
 import { expectSaved, expectStrokes, hasInk, openSketch, pointer } from './ink-helpers';
 
 async function draw(page: Page, x = 100): Promise<void> {
@@ -198,7 +200,8 @@ test('invalid imports and canceled restores leave ink and storage unchanged', as
   expect(await readDraft(page)).toEqual(before);
 });
 
-for (const sketch of [{ format: 'sheetmusicomposer', version: 2, document: { future: true } }, { broken: true }]) {
+for (const sketch of [{ format: 'sheetmusicomposer', version: 99, document: { future: true } }, { broken: true },
+  { format: 'sheetmusicomposer', version: 2, document: { strokes: [], measures: 'invalid' } }]) {
   test(`unreadable saved data stays untouched (${JSON.stringify(sketch)})`, async ({ page }) => {
     await openSketch(page);
     const raw = { revision: 1, sketch };
@@ -285,4 +288,112 @@ test('a stale tab cannot overwrite a newer saved revision', async ({ page, conte
   await expect(stale.locator('#save-status')).toContainText('Another tab changed');
   expect(await readDraft(page)).toEqual(before);
   expect((await downloadBackup(stale)).strokes).toHaveLength(1);
+});
+
+test('version-2 music survives restore, IndexedDB reload, and backup with all original ink', async ({ page }) => {
+  const music = musicalDocument();
+  await openSketch(page);
+  await upload(page, JSON.stringify(sketchFile(music)));
+  await expectStrokes(page, 5);
+  await expectSaved(page);
+  await expect(page.locator('#backup-status')).toContainText('displays original ink only');
+  expect(await readDraft(page)).toMatchObject({ sketch: { version: 2, document: music } });
+  expect(await downloadBackup(page)).toEqual(music);
+  await page.reload();
+  await expectStrokes(page, 5);
+  await expect(page.locator('#backup-status')).toContainText('Musical backup loaded');
+  expect(await downloadBackup(page)).toEqual(music);
+});
+
+test('new ink invalidates saved events while Undo/Redo and reload preserve their source ink', async ({ page }) => {
+  const music = musicalDocument();
+  await openSketch(page);
+  await upload(page, JSON.stringify(sketchFile(music)));
+  await expectStrokes(page, 5);
+  await expectSaved(page);
+  await draw(page);
+  await expectStrokes(page, 6);
+  await expectSaved(page);
+  const invalidated = await downloadBackup(page);
+  expect(invalidated.measures?.map((m) => m.events)).toEqual([[], []]);
+  expect(invalidated.measures?.map((m) => m.unresolvedStrokeIds)).toEqual([['h', 's', 'u'], ['r']]);
+  expect(invalidated.strokes.slice(0, 5)).toEqual(music.strokes);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expectStrokes(page, 5);
+  await expectSaved(page);
+  expect(await downloadBackup(page)).toEqual(music);
+  await page.getByRole('button', { name: 'Redo', exact: true }).click();
+  await expectStrokes(page, 6);
+  await expectSaved(page);
+  expect(await downloadBackup(page)).toEqual(invalidated);
+  await page.reload();
+  await expectStrokes(page, 6);
+  expect(await downloadBackup(page)).toEqual(invalidated);
+});
+
+test('New clears music as well as ink in one reversible step', async ({ page }) => {
+  const music = musicalDocument();
+  await openSketch(page);
+  await upload(page, JSON.stringify(sketchFile(music)));
+  await expectStrokes(page, 5);
+  await expectSaved(page);
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'New', exact: true }).click();
+  await expectStrokes(page, 0);
+  await expectSaved(page);
+  expect(await downloadBackup(page)).toEqual({ strokes: [] });
+  expect(await readDraft(page)).toMatchObject({ sketch: { version: 1, document: { strokes: [] } } });
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expectStrokes(page, 5);
+  await expectSaved(page);
+  expect(await downloadBackup(page)).toEqual(music);
+});
+
+test('New also clears a musical document with no ink and Undo restores its measure metadata', async ({ page }) => {
+  const emptyMusic = { strokes: [], measures: [{ id: 'empty', clef: 'treble', timeSignature: '6/8', events: [], unresolvedStrokeIds: [] }] };
+  await openSketch(page);
+  await upload(page, JSON.stringify({ format: 'sheetmusicomposer', version: 2, document: emptyMusic }));
+  await expect(page.locator('#backup-status')).toContainText('Backup restored');
+  await expectSaved(page);
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'New', exact: true }).click();
+  await expectSaved(page);
+  expect(await downloadBackup(page)).toEqual({ strokes: [] });
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expectSaved(page);
+  expect(await downloadBackup(page)).toEqual(emptyMusic);
+});
+
+test('invalid musical backups do not replace ink or the saved revision', async ({ page }) => {
+  await openSketch(page);
+  await draw(page);
+  await expectSaved(page);
+  const before = await readDraft(page);
+  const music = musicalDocument();
+  const invalid = { ...music, measures: [{ ...music.measures![0]!, events: [{ ...music.measures![0]!.events[0]!, confidence: 2 }] }] };
+  await upload(page, JSON.stringify({ format: 'sheetmusicomposer', version: 2, document: invalid }));
+  await expect(page.locator('#backup-status')).toContainText('Invalid music confidence');
+  await expectStrokes(page, 1);
+  expect(await readDraft(page)).toEqual(before);
+});
+
+test('fixture recording from a musical backup exports ink only and never promotes saved events to ground truth', async ({ page }) => {
+  const music = musicalDocument();
+  await openSketch(page);
+  await upload(page, JSON.stringify(sketchFile(music)));
+  await expectStrokes(page, 5);
+  await expectSaved(page);
+  const before = await readDraft(page);
+  await page.getByRole('button', { name: 'Record fixture' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Record fixture' });
+  await dialog.getByLabel('Name', { exact: true }).fill('manual-truth-only');
+  const pending = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'Download fixture' }).click();
+  const path = await (await pending).path();
+  if (!path) throw new Error('No fixture download');
+  const fixture = parseFixture(await readFile(path, 'utf8'));
+  expect(fixture.document).toEqual({ strokes: music.strokes });
+  expect(fixture.expected.events).toEqual([]);
+  expect(fixture.expected.primitives).toEqual([{ label: 'unknown', strokeIds: music.strokes.map((s) => s.id) }]);
+  expect(await readDraft(page)).toEqual(before);
 });

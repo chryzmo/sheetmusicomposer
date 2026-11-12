@@ -32,7 +32,7 @@ Files can be nested by set. Names must be unique across the whole tree. Every `.
 - `expected.primitives`: `{label, strokeIds}` groups. Allowed labels: `noteheadFilled`, `noteheadHollow`, `stem`, `flag`, `beam`, `restBlock`, `restHook`, `quarterRest`, `dot`, `sharp`, `flat`, `natural`, `unknown`.
 - `expected.events`: `{kind, duration, dots, strokeIds}`; notes additionally include `pitch: {step, octave}` and `accidental` (`null`, `sharp`, `flat`, `natural`). Rest objects have neither pitch nor accidental. Array order is musical order, not an inferred x-coordinate or timestamp sort.
 
-Human-facing stroke numbers are converted to original string IDs at export. The current decoder accepts octaves 0–9. Fixture text fields are limited to 2,000 characters each; JSON is limited to 10 MiB, 10,000 strokes, and 1,000,000 points. Export rejects an oversized fixture rather than truncating raw ink or producing a file the loader cannot read. Limits live in `src/config.ts`.
+Human-facing stroke numbers are converted to original string IDs at export. The current decoder accepts octaves 0–9. Fixture documents remain v1 ink-only even when the app sketch uses musical file version 2. Recording exports only the original strokes; stored model events never become expected ground truth automatically. Fixture text fields are limited to 2,000 characters each; JSON is limited to 10 MiB, 10,000 strokes, and 1,000,000 points. Export rejects an oversized fixture rather than truncating raw ink or producing a file the loader cannot read. Limits live in `src/config.ts`.
 
 ## Current inventory and accuracy
 

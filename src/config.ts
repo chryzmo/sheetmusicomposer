@@ -80,6 +80,10 @@ export const config = {
   // Minimum horizontal gap between head bounds, in staff spaces. Overlapping
   // columns are withheld rather than interpreted as chords/multiple voices.
   assemblyHeadColumnClearance: 0.25,
+  // Musical document validation limits, not recognition/calibration settings.
+  maxMusicMeasures: 1000,
+  maxMusicIdLength: 256,
+  maxMusicDots: 2,
   // Fixture annotation safety limits, not recognition thresholds.
   maxFixtureTextLength: 2000,
   maxFixtureDots: 2,
