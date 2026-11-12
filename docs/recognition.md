@@ -49,6 +49,8 @@ All policy numbers live in `src/config.ts`. They remain **experimental**, not ca
 
 Tests cover seed-derived positives (explicitly not held-out data), geometry gates, interruptions, retracing/disconnected strokes, missing alternatives, ties, cutoff neighborhoods, raw immutability, timestamp-order independence, and malformed inputs. The original synthetic boundary fixture retains its **intended** primitive labels: three wide/slanted/retraced examples are now accepted as stems, while eight known labels remain misses. No ground truth is relabeled to fit the classifier. A new synthetic linearity fixture covers retraced/slanted stems and unsupported bent, looped, zigzag, and over-slanted marks.
 
+Personal handwriting templates are being added in stages; see [personal templates](personal-templates.md).
+
 ## Evaluation status and next steps
 
 The **development/regression** comparisons below use manual/oracle primitive groups and the unchanged synthetic seed bank. The candidate policy and all 15 development templates are separately frozen before any evaluation recognition run. It does not measure grouping, pitch, duration, rendering, full-pipeline accuracy, or real iPad latency. Recorded input is not automatically held-out: the existing recording was already inspected during matcher development. No templates or thresholds were selected to improve its results.

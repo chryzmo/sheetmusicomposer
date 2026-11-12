@@ -179,7 +179,12 @@ export function rankPointCloud<Label extends string>(query: PreparedCloud, templ
     return { label: template.label, templateId: template.id, source: template.source, distance: pointCloudDistance(query, template.cloud) };
   });
   const compare = (a: string, b: string): number => a < b ? -1 : a > b ? 1 : 0;
-  candidates.sort((a, b) => a.distance - b.distance || compare(a.label, b.label) || compare(a.templateId, b.templateId));
+  // On an exactly equal distance a user template outranks a built-in one. This is
+  // only a deterministic tie-break, not a distance bonus: a built-in template that
+  // is even slightly closer still wins. (Exact float ties are rare; a user bonus
+  // would need evidence from held-out data before it is added.)
+  const rank = ({ source }: { source: TemplateSource }): number => source.kind === 'user' ? 0 : 1;
+  candidates.sort((a, b) => a.distance - b.distance || rank(a) - rank(b) || compare(a.label, b.label) || compare(a.templateId, b.templateId));
   const seen = new Set<Label>();
   return candidates.filter(({ label }) => {
     if (seen.has(label)) return false;

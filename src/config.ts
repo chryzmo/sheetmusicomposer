@@ -14,6 +14,11 @@ export const config = {
   // Import safety limits: bound JSON file size and decoded ink allocations.
   maxBackupBytes: 10 * 1024 * 1024,
   maxStoredStrokes: 10000,
+  // Personal-template limits (training samples saved on this device). Bounds
+  // matching cost, which grows with every template, and storage. Guesses, not
+  // tuned: per supported label, and per sample's raw points.
+  maxUserTemplatesPerLabel: 30,
+  maxUserTemplatePoints: 20000,
   maxStoredPoints: 1000000,
   // Number of derived samples per $P cloud; raw ink is never resampled in place.
   pointCloudSampleCount: 32,

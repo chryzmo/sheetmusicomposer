@@ -168,3 +168,20 @@ it('provides three explicitly synthetic seed templates, not a measured handwriti
   expect(rankPointCloud(preparePointCloud(vertical), bank)[0]?.label).toBe('stem');
   expect(createBuiltinTemplates(8).every(({ cloud }) => cloud.points.length === 8)).toBe(true);
 });
+
+it('breaks exact distance ties toward a user template, but never over a closer built-in one', () => {
+  const strokes = [{ id: 's', points: [{ x: 0, y: 0 }, { x: 1, y: 0.2 }, { x: 2, y: 0 }, { x: 3, y: 1 }] }];
+  const query = preparePointCloud(strokes);
+  const mk = (id: string, label: 'a' | 'b', kind: 'builtin' | 'user', cloudStrokes = strokes) =>
+    prepareTemplate(cloudStrokes, { id, label, source: { kind, sampleId: id } });
+  // Built-in would win on label AND ID ordering, so only the source rule can put user first.
+  const tie = rankPointCloud(query, [mk('a-builtin', 'a', 'builtin'), mk('z-user', 'b', 'user')]);
+  expect(tie.map((c) => c.templateId)).toEqual(['z-user', 'a-builtin']);
+  expect(tie[0]!.distance).toBe(tie[1]!.distance);
+  // Same label: the user template is the reported best on an exact tie.
+  expect(rankPointCloud(query, [mk('a-builtin', 'a', 'builtin'), mk('z-user', 'a', 'user')]).map((c) => c.templateId)).toEqual(['z-user']);
+  // A slightly closer built-in still wins: this is a tie-break, not a bonus.
+  const off = [{ id: 's', points: [{ x: 0, y: 0 }, { x: 1, y: 0.2 }, { x: 2, y: 0 }, { x: 3, y: 1.4 }] }];
+  const closer = rankPointCloud(query, [mk('z-user', 'b', 'user', off), mk('a-builtin', 'a', 'builtin')]);
+  expect(closer.map((c) => c.templateId)).toEqual(['a-builtin', 'z-user']);
+});
