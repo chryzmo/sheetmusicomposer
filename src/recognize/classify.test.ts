@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { config } from '../config';
 import type { Stroke } from '../ink/types';
 import { createBuiltinTemplates } from './builtins';
-import { classifyPrimitive } from './classify';
+import { classifyPrimitive, sampleGeometryRejections } from './classify';
 import type { SimplePrimitive } from './primitives';
 import { preparePointCloud, prepareTemplate } from './templates';
 import { cloudLinearityRatio } from './geometry';
@@ -179,4 +179,17 @@ it('fails explicitly for invalid typed input or incompatible template clouds', (
   expect(() => classifyPrimitive([line(), line()], bank)).toThrow(RangeError);
   expect(() => classifyPrimitive([line()], createBuiltinTemplates(8))).toThrow('equal sample counts');
   expect(() => classifyPrimitive([line()], [bank[0]!, bank[0]!])).toThrow('unique');
+});
+
+it('reports a sample\'s own geometry problems for the label it would be saved under', () => {
+  expect(sampleGeometryRejections('stem', [line(3)])).toEqual([]);
+  expect(sampleGeometryRejections('noteheadHollow', [diamond()])).toEqual([]);
+  expect(sampleGeometryRejections('noteheadFilled', [diamond(0.1, 0.1)])).toContain('head-size');
+  expect(sampleGeometryRejections('stem', [line(0.5)])).toContain('stem-size');
+  expect(sampleGeometryRejections('stem', [diamond()])).toContain('stem-size');
+  // A stem must be one stroke, and a tilted stem past the slant limit is refused.
+  expect(sampleGeometryRejections('stem', [line(3), line(3)].map((stroke, i) => ({ ...stroke, id: `s${i}` })))).toContain('stem-strokes');
+  expect(sampleGeometryRejections('stem', [line(3, 3)])).toContain('stem-aspect');
+  // Agrees with classification: a candidate flagged here is rejected there.
+  expect(classifyPrimitive([line(0.5)], bank).label).toBe('unknown');
 });
