@@ -69,6 +69,8 @@ Grouping tests pass raw synthetic strokes plus an explicitly authored observatio
 
 - `runtime-review.json`: **synthetic template-derived/self-similar** review regression (quarter E4 + whole E4 + unsupported tap), not independent handwriting. Deliberately decreasing sample times and an overfull measure exercise raw preservation/explicit review, not native timing or duration resolution. See [runtime bank/review evidence](../docs/runtime-review.md).
 
+Recorded regression fixtures also need a recording session in `tests/fixtures/personal-sessions.ts`; see [personal templates](../docs/personal-templates.md) for the held-out report that uses them.
+
 Total: 11 files, with expected primitive counts `noteheadFilled: 17`, `noteheadHollow: 26`, `stem: 30`, `dot: 1`, `unknown: 15`. Inventory counts include evaluation; automatic classification reports do not score it.
 
 Schema validation proves only source-reference integrity and lossless serialization. Separately, the experimental classifier report evaluates **oracle/manual groups**, not automatically recognized notes. The assembly suite separately uses explicit synthetic event truth and oracle primitive labels; it never treats empty event lists on real primitive-only recordings as an assertion of no notes. A frozen session-evaluation command is opt-in and separate from these development/regression results. It prints per-set/provenance confusion cells, exact label agreement, acceptance coverage, wrong accepts, rejected known labels, and unknown rejection. It is a development regression baseline, not a held-out benchmark. Existing annotations and original files are unchanged.
