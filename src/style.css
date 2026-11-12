@@ -96,6 +96,9 @@ button:focus-visible { outline: 3px solid #2c7663; outline-offset: 3px; }
 .review-notation { overflow: auto; overscroll-behavior: contain; max-height: 28rem; border: 1px solid #d4d6cb; }
 .review-notation svg { display: block; max-width: none; }
 #review-status { display: block; margin-top: 1rem; }
+/* State is also in the message's leading word, so color is not the only cue. */
+#review-duration[data-state='under'], #review-duration[data-state='over'] { padding: 0.4rem 0.6rem; border-left: 4px solid #b27a00; background: #fff4d6; font-weight: 600; }
+#review-duration[data-state='over'] { border-left-color: #b12e21; background: #fde8e4; }
 .review-actions { position: sticky; top: 0; z-index: 1; padding: 0.5rem 0; background: #fffef9; border-bottom: 1px solid #d4d6cb; }
 dialog .review-signature { max-width: 14rem; margin: 0.75rem 0; }
 .review-candidate { border-top: 1px solid #d4d6cb; padding: 0.5rem 0; }

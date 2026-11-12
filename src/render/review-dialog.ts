@@ -7,7 +7,7 @@ import { reviewedMusicCommand } from '../recognize/review';
 import type { MusicReview } from '../recognize/review';
 import { drawInkReference } from './ink-reference';
 import type { ReviewRequest, ReviewResponse } from './review-protocol';
-import { reviewDuration } from './notation-model';
+import { reviewDuration, reviewDurationMessage } from './notation-model';
 
 export interface NoteReviewUi { update: (state: Pick<InkSurfaceStatus, 'document' | 'isDrawing'>) => void }
 
@@ -73,7 +73,8 @@ export function attachNoteReview(button: HTMLButtonElement, surface: InkSurface,
     for (const [id, path] of paths) path.setAttribute('stroke', used.has(id) ? '#2c7663' : proposed.has(id) ? '#26352f' : '#b12e21');
     keep.disabled = indices.length === 0;
     const { units, target } = reviewDuration(indices.map((i) => prepared!.candidates[i]!.note.duration), timeSignature());
-    duration.textContent = `Selected duration: ${units} quarter-note units; target ${target} (${timeSignature()}). ${units === target ? 'Duration total matches, not proof of correctness.' : 'Partial/overfull selection allowed; no durations are repaired automatically.'}`;
+    const message = reviewDurationMessage(units, target, timeSignature());
+    duration.textContent = message.text; duration.dataset.state = message.state;
     const proposals = prepared.candidates.length, unused = prepared.assembly.unresolvedStrokeIds.length;
     status.textContent = `${proposals} proposal${proposals === 1 ? '' : 's'}; ${unused} stroke${unused === 1 ? '' : 's'} unused by proposals (red). ${indices.length} selected. Unchecked proposal sources also remain unresolved.`;
   };
@@ -87,7 +88,7 @@ export function attachNoteReview(button: HTMLButtonElement, surface: InkSurface,
   };
   dialog.addEventListener('close', () => {
     invalidate(''); prepared = null; inputs = []; paths.clear();
-    choices.replaceChildren(); notation.replaceChildren(); ink.replaceChildren(); duration.textContent = '';
+    choices.replaceChildren(); notation.replaceChildren(); ink.replaceChildren(); duration.textContent = ''; delete duration.dataset.state;
     updateButton(); if (!signal.aborted) button.focus();
   }, options);
   dialog.addEventListener('cancel', (event) => { event.preventDefault(); dismiss(); }, options);

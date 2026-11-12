@@ -62,8 +62,8 @@ test('explicitly selected notes persist with original samples, exact undo/redo, 
   await openSketch(page); await upload(page); await review(page);
   await page.getByRole('checkbox', { name: /Note 1: E4, quarter/ }).check();
   await page.getByRole('checkbox', { name: /Note 2: E4, whole/ }).check();
-  await expect(page.locator('#review-duration')).toContainText('5 quarter-note units; target 4');
-  await expect(page.locator('#review-duration')).toContainText('Partial/overfull');
+  await expect(page.locator('#review-duration')).toContainText('Overfull: 5 quarter-note units selected but a 4/4 measure holds 4');
+  await expect(page.locator('#review-duration')).toHaveAttribute('data-state', 'over');
   await keep(page).click(); await expectSaved(page);
   const after = await backup(page);
   expect(after.strokes).toEqual(source.strokes);
@@ -93,7 +93,7 @@ test('hollow head plus a unique stem renders and keeps a half note without inven
   await expect(page.locator('#review-status')).toContainText('1 proposal');
   await expect(page.locator('.review-notation .vf-stavenote')).toHaveCount(1);
   await page.getByRole('checkbox', { name: /Note 1: E4, half/ }).check();
-  await expect(page.locator('#review-duration')).toContainText('2 quarter-note units; target 4');
+  await expect(page.locator('#review-duration')).toContainText('Underfull: 2 of 4 quarter-note units in 4/4; 2 quarter-note units short.');
   await keep(page).click(); await expectSaved(page);
   const result = await backup(page);
   expect(result.measures?.[0]?.events.map((e) => e.duration)).toEqual(['half']);
@@ -105,7 +105,12 @@ test('partial explicit selection and time signature changes keep all other sourc
   await page.getByLabel('Review time signature').selectOption('6/8');
   await expect(page.getByRole('checkbox', { name: /Note 2/ })).toBeEnabled();
   await page.getByRole('checkbox', { name: /Note 2/ }).check();
-  await expect(page.locator('#review-duration')).toContainText('target 3 (6/8)');
+  await expect(page.locator('#review-duration')).toContainText('Overfull: 4 quarter-note units selected but a 6/8 measure holds 3');
+  await page.getByLabel('Review time signature').selectOption('4/4');
+  await expect(page.locator('#review-duration')).toHaveAttribute('data-state', 'match');
+  await expect(page.locator('#review-duration')).toContainText('Total matches: 4 quarter-note units in 4/4');
+  await page.getByLabel('Review time signature').selectOption('6/8');
+  await expect(page.locator('#review-duration')).toHaveAttribute('data-state', 'over');
   await keep(page).click(); await expectSaved(page);
   const result = await backup(page);
   expect(result.measures?.[0]?.timeSignature).toBe('6/8');
@@ -290,4 +295,14 @@ test('reviewed notes compose with New and Restore in the same reversible history
   expect(await backup(page)).toEqual(source);
   await page.getByRole('button', { name: 'Undo', exact: true }).click(); await expectSaved(page);
   expect(await backup(page)).toEqual(after);
+});
+
+test('review duration line distinguishes empty from underfull selections', async ({ page }) => {
+  await openSketch(page); await upload(page); await review(page);
+  await expect(page.locator('#review-duration')).toHaveAttribute('data-state', 'empty');
+  await expect(page.locator('#review-duration')).toContainText('No notes selected. A 4/4 measure holds 4 quarter-note units.');
+  await page.getByRole('checkbox', { name: /Note 1: E4, quarter/ }).check();
+  await expect(page.locator('#review-duration')).toHaveAttribute('data-state', 'under');
+  await expect(page.locator('#review-duration')).toContainText('Underfull: 1 of 4 quarter-note units in 4/4; 3 quarter-note units short.');
+  await cancel(page).click();
 });
