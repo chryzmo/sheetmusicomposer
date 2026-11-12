@@ -49,7 +49,7 @@ it('detects source overlap without running recognition on reserved input', () =>
 
 it('requires an explicit role for every file, including future imports', () => {
   expect(fixtures.map(({ path }) => fixtureRole(path)).sort()).toEqual([
-    'development', 'evaluation', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression',
+    'development', 'evaluation', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression',
   ]);
   expect(() => fixtureRole(join(fixtureRoot, 'recorded/unassigned.json'))).toThrow('Unassigned fixture role');
 });

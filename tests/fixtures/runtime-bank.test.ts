@@ -11,9 +11,9 @@ it('reports the new runtime bank separately from unchanged synthetic-bank baseli
   const observations = evaluatePrimitives(fixtures, createRuntimeBank().templates);
   console.info('Runtime bank pencil-dev-v1 — regression diagnostics, NOT independent/held-out handwriting accuracy. Template-derived runtime-review-self-derived positives are a separate set.');
   console.info(classificationReport(observations, 'pencil-dev-v1 recorded development bank (15 templates, builtin provenance)'));
-  expect(observations).toHaveLength(54);
+  expect(observations).toHaveLength(64);
   const expected = [
-    ['classifier-boundaries', 4, 12], ['classifier-linearity', 6, 6], ['personal', 1, 2],
+    ['classifier-boundaries', 4, 12], ['classifier-linearity', 6, 6], ['personal', 10, 12],
     ['primitive-grouping', 4, 9], ['runtime-review-self-derived', 4, 4],
     ['simple-note-assembly', 15, 16], ['synthetic-smoke', 3, 5],
   ] as const;
