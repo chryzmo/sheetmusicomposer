@@ -1,6 +1,6 @@
 # Recorded ink fixtures
 
-Fixtures pair original staff-space ink with **manually entered expectations**. They are not recognition output or ordinary sketch backups. The recorder and loader do not run recognition. A separate development test harness now evaluates the experimental primitive classifier on manually annotated groups; it does not evaluate automatic grouping. A separate assembly suite tests synthetic musical events using oracle primitive labels, not recorded-handwriting event accuracy.
+Fixtures pair original staff-space ink with **manually entered expectations**. They are not recognition output or ordinary sketch backups. The recorder and loader do not run recognition. A separate development test harness now evaluates the experimental primitive classifier on manually annotated groups; it does not itself evaluate automatic grouping. Separate suites now test grouping with authored synthetic observation clocks/regions, isolated assembly with oracle primitive labels, and their composition on exhaustive synthetic event truth—not recorded-handwriting/native-timing event accuracy.
 
 ## Recording on the iPad
 
@@ -36,7 +36,9 @@ Human-facing stroke numbers are converted to original string IDs at export. The 
 
 ## Current inventory and accuracy
 
-`synthetic/` contains **three hand-authored smoke tests, two classifier suites, and one simple-note assembly suite**, not real handwriting:
+Grouping tests pass raw synthetic strokes plus an explicitly authored observation schedule (100-ms starts, 40-ms durations, one region), not expected primitive labels, into `groupStrokes()`. They match 29/29 expected groups (4/4 exact fixture partitions). On the three fixtures with exhaustive simple-note event truth, group → classify → assemble yields 6/7 exact expected events, with no extra/wrong emitted candidates; the original C4-quarter classifier miss remains a miss. This differs from isolated assembly's 7/7 with oracle labels. No raw Pencil timestamps are converted into arrival clocks, no recorded handwriting is temporally grouped, and an empty event array is not inferred to mean no notes. See [the grouping contract](../docs/grouping.md).
+
+`synthetic/` contains **three hand-authored smoke tests, two classifier suites, one simple-note assembly suite, and one primitive-grouping suite**, not real handwriting:
 
 - Filled head + stem, with an expected C4 quarter note.
 - Hollow head + stem, with an expected E4 half note.
@@ -44,6 +46,8 @@ Human-facing stroke numbers are converted to original string IDs at export. The 
 - `classifier-boundaries.json`: 12 groups checking experimental size/aspect, multi-stroke, and interruption gates. The original policy rejected all eleven intended known labels; the candidate now accepts its wide/slanted/retraced stems. Labels are unchanged; rejection is **not** counted as correct recognition of a known label.
 - `classifier-linearity.json`: retraced/slanted stems plus four unsupported bent, looped, zigzag, and over-slanted marks, exercising covariance-linearity and stem bounds.
 - `simple-note-assembly.json`: five expected whole/half/quarter notes plus shared-stem ambiguity, nearby unsupported ink, an unused stem, and an interrupted head. Event truth is exhaustive for this authored fixture; it is deliberately overfull to isolate geometry from later measure resolution. Together with the first two smoke fixtures, oracle-label assembly matches 7/7 expected events. See [assembly rules/limitations](../docs/assembly.md).
+
+- `primitive-grouping.json`: split outline/inset-fill group truth, separate stem/dot/neighboring heads, interrupted ink, and unsupported connected/horizontal shapes. It has primitive-only expectations; the corresponding observation schedule is authored in the grouping tests, not embedded/recovered as native capture metadata.
 
 `recorded/quarter-e4.json` is the first real Pencil fixture, exported by the user and retained byte-for-byte. Its original name is `Quarter-e4`, set `personal`, provenance `recorded`. It contains two complete strokes (1,091 head samples and 344 stem samples), manually labeled `noteheadFilled` and `stem`. Its head lies near the bottom staff line (E4), but `expected.events` is empty: this is **primitive-only ground truth**, not yet an assertion of an E4 quarter-note event. No event annotation has been inferred from the filename. The raw ink includes 331 timestamp decreases, preserved unchanged.
 
@@ -54,10 +58,11 @@ Human-facing stroke numbers are converted to original string IDs at export. The 
 | classifier-boundaries | synthetic | 1 | noteheadHollow: 4; stem: 7; unknown: 1 |
 | classifier-linearity | synthetic | 1 | stem: 2; unknown: 4 |
 | simple-note-assembly | synthetic | 1 | noteheadFilled: 3; noteheadHollow: 6; stem: 6; unknown: 1 |
+| primitive-grouping | synthetic | 1 | noteheadFilled: 1; noteheadHollow: 4; stem: 1; dot: 1; unknown: 2 |
 | Pencil-template-dev-1 | recorded | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5 |
 | Pencil-eval-session-2 | recorded, frozen evaluation | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5; unknown: 5 |
 
-Total: 9 files, with expected primitive counts `noteheadFilled: 15`, `noteheadHollow: 21`, `stem: 28`, `unknown: 12`. Inventory counts include evaluation; automatic classification reports do not score it.
+Total: 10 files, with expected primitive counts `noteheadFilled: 16`, `noteheadHollow: 25`, `stem: 29`, `dot: 1`, `unknown: 14`. Inventory counts include evaluation; automatic classification reports do not score it.
 
 Schema validation proves only source-reference integrity and lossless serialization. Separately, the experimental classifier report evaluates **oracle/manual groups**, not automatically recognized notes. The assembly suite separately uses explicit synthetic event truth and oracle primitive labels; it never treats empty event lists on real primitive-only recordings as an assertion of no notes. A frozen session-evaluation command is opt-in and separate from these development/regression results. It prints per-set/provenance confusion cells, exact label agreement, acceptance coverage, wrong accepts, rejected known labels, and unknown rejection. It is a development regression baseline, not a held-out benchmark. Existing annotations and original files are unchanged.
 
@@ -67,7 +72,8 @@ Schema validation proves only source-reference integrity and lossless serializat
 | personal (recorded) | 0/2 | 1/2 | 1/2 | 0 | 1 |
 | classifier-boundaries | 1/12 | 4/12 | 3/12 | 0 | 8 |
 | classifier-linearity | new cases | 6/6 | 2/6 | 0 | 0 |
-| simple-note-assembly | new cases | 15/16 | 14/16 | 0 | 1 |
+| simple-note-assembly | existing cases | 15/16 | 14/16 | 0 | 1 |
+| primitive-grouping | new cases | 7/9 | 5/9 | 0 | 2 |
 
 The smoke stems and hollow head now pass; its filled head still fails distance and its interrupted unknown is rejected. The original real Pencil stem now passes while its filled head still fails distance. The boundary suite's three newly supported stems retain their original intended labels; its eight remaining known-label misses are still reported honestly. Do not average these sets together or infer general safety from zero wrong accepts in a tiny collection. The classifier remains disconnected from the canvas. See [the recognition design](../docs/recognition.md).
 

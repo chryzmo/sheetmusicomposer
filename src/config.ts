@@ -50,6 +50,23 @@ export const config = {
   // Initially support single-stroke stems only; multi-stroke groups remain ink
   // until reviewed examples justify a less restrictive rule.
   primitiveStemMaxStrokes: 1,
+  // Grouping guesses, NOT calibrated from handwriting. All grouping times use
+  // an explicit monotonic observation clock, never raw sample timestamps.
+  groupPauseMs: 500,
+  // Bound a recomputed grouping window and compact fragment-chain size.
+  groupMaxInputStrokes: 256,
+  groupMaxStrokesPerGroup: 8,
+  // Staff-space fragment minima keep taps, small dots, and thin horizontal/
+  // vertical lines separate. Union size must also fit the head bounds above.
+  groupFragmentMinWidth: 0.2,
+  groupFragmentMinHeight: 0.2,
+  groupFragmentMinExtent: 0.3,
+  // Staff-space endpoint join radius and single-path closed-loop radius.
+  // Ambiguous endpoint pairings remain separate instead of choosing nearest.
+  groupEndpointMaxGap: 0.15,
+  groupLoopMaxGap: 0.1,
+  // Staff-space padding for inset fill/retracing inside a compact closed path.
+  groupContainmentPadding: 0.05,
   // Assembly guesses, NOT calibrated acceptance thresholds. Process one finished
   // measure at a time; cap the quadratic attachment/blocker work explicitly.
   assemblyMaxPrimitives: 256,

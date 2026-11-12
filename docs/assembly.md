@@ -45,6 +45,8 @@ This is **not automatic grouping, classifier accuracy, recorded-handwriting even
 
 ## Frozen evaluation and next integration
 
+A separate [pure grouping stage](grouping.md) now supplies candidate primitive partitions without manual labels, using explicit observation clocks and supplied regions. On the three synthetic event fixtures, group → classify → assemble gives 6/7 exact expected events with no wrong/extra candidates; the C4-quarter head still fails classifier distance. This is distinct from isolated oracle-label assembly's 7/7, and is not recorded/native/full-app accuracy.
+
 No primitive classifier thresholds, template bank, original recorded bytes, stored frozen hashes, or first-run evaluation decisions changed. However, the added assembly settings in shared `src/config.ts` and explicit new fixture assignment in `tests/fixtures/roles.ts` change two pinned file hashes. **The old v1 evaluation runner intentionally refuses this checkout before classification.** Do not update its manifest to bypass the guard; reproduce from a separate worktree at `558fa7d`, as described in the [frozen result](recognition-evaluations/pencil-v1.md).
 
-Next: automatic stroke grouping (using observation timing rather than assuming raw timestamps are monotonic), an explicit reviewed runtime template bank, validated event commands/persistence, and opt-in VexFlow display. Recognition is not attached to the canvas. Native iPad/Safari performance, unknown-ink rendering, alignment, correction/undo, and save/reload acceptance must be tested when integration exists.
+Next: a live observation/recognition coordinator, an explicit reviewed runtime template bank, validated event evidence/commands/persistence, and opt-in VexFlow display. Recognition is not attached to the canvas. Native iPad/Safari performance, unknown-ink rendering, alignment, correction/undo, and save/reload acceptance must be tested when integration exists.

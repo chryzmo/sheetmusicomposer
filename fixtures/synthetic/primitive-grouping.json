@@ -1,0 +1,192 @@
+{
+  "format": "sheetmusicomposer-fixture",
+  "version": 1,
+  "name": "synthetic-primitive-grouping",
+  "set": "primitive-grouping",
+  "provenance": "synthetic",
+  "notes": "Authored primitive grouping truth, NOT recorded handwriting. Tests supply a separately authored observation schedule (100 ms starts, 40 ms durations, one region); raw t deliberately decreases and is never converted to arrival timing. Join split outline/inset fill; keep stem, dot, neighboring outlines, interrupted ink, unsupported connected full glyph, and horizontal line separate. Events are unannotated, NOT an assertion of no notes.",
+  "staff": {
+    "units": "staff-space",
+    "lineYs": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "width": 40,
+    "clef": "treble",
+    "timeSignature": "4/4"
+  },
+  "document": {
+    "strokes": [
+      {
+        "id": "split-left",
+        "completion": "complete",
+        "points": [
+          {"x":4,"y":3.7,"t":1000,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":3.5,"y":4,"t":999,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":4,"y":4.3,"t":998,"pressure":0.5,"tiltX":0,"tiltY":0}
+        ]
+      },
+      {
+        "id": "split-right",
+        "completion": "complete",
+        "points": [
+          {"x":4,"y":4.3,"t":1000,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":4.5,"y":4,"t":999,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":4,"y":3.7,"t":998,"pressure":0.5,"tiltX":0,"tiltY":0}
+        ]
+      },
+      {
+        "id": "fill-outline",
+        "completion": "complete",
+        "points": [
+          {"x":10,"y":3.7,"t":1000,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":9.5,"y":4,"t":999,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":10,"y":4.3,"t":998,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":10.5,"y":4,"t":997,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":10,"y":3.7,"t":996,"pressure":0.5,"tiltX":0,"tiltY":0}
+        ]
+      },
+      {
+        "id": "inset-fill",
+        "completion": "complete",
+        "points": [
+          {"x":9.7,"y":3.85,"t":1000,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":10.3,"y":3.9,"t":999,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":9.7,"y":4,"t":998,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":10.3,"y":4.1,"t":997,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":9.7,"y":4.15,"t":996,"pressure":0.5,"tiltX":0,"tiltY":0}
+        ]
+      },
+      {
+        "id": "stem",
+        "completion": "complete",
+        "points": [
+          {"x":10.5,"y":1,"t":1000,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":10.5,"y":4,"t":999,"pressure":0.5,"tiltX":0,"tiltY":0}
+        ]
+      },
+      {
+        "id": "dot",
+        "completion": "complete",
+        "points": [
+          {"x":10.7,"y":4,"t":1000,"pressure":0.5,"tiltX":0,"tiltY":0}
+        ]
+      },
+      {
+        "id": "neighbor-left",
+        "completion": "complete",
+        "points": [
+          {"x":15,"y":3.7,"t":1000,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":14.5,"y":4,"t":999,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":15,"y":4.3,"t":998,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":15.5,"y":4,"t":997,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":15,"y":3.7,"t":996,"pressure":0.5,"tiltX":0,"tiltY":0}
+        ]
+      },
+      {
+        "id": "neighbor-right",
+        "completion": "complete",
+        "points": [
+          {"x":15.8,"y":3.7,"t":1000,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":15.3,"y":4,"t":999,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":15.8,"y":4.3,"t":998,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":16.3,"y":4,"t":997,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":15.8,"y":3.7,"t":996,"pressure":0.5,"tiltX":0,"tiltY":0}
+        ]
+      },
+      {
+        "id": "interrupted",
+        "completion": "interrupted",
+        "points": [
+          {"x":20,"y":3.7,"t":1000,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":19.5,"y":4,"t":999,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":20,"y":4.3,"t":998,"pressure":0.5,"tiltX":0,"tiltY":0}
+        ]
+      },
+      {
+        "id": "connected-glyph",
+        "completion": "complete",
+        "points": [
+          {"x":24.5,"y":1,"t":1000,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":24.5,"y":4,"t":999,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":24,"y":4.3,"t":998,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":23.5,"y":4,"t":997,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":24,"y":3.7,"t":996,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":24.5,"y":4,"t":995,"pressure":0.5,"tiltX":0,"tiltY":0}
+        ]
+      },
+      {
+        "id": "horizontal",
+        "completion": "complete",
+        "points": [
+          {"x":27.5,"y":4,"t":1000,"pressure":0.5,"tiltX":0,"tiltY":0},
+          {"x":28.5,"y":4,"t":999,"pressure":0.5,"tiltX":0,"tiltY":0}
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "primitives": [
+      {
+        "label": "noteheadHollow",
+        "strokeIds": [
+          "split-left",
+          "split-right"
+        ]
+      },
+      {
+        "label": "noteheadFilled",
+        "strokeIds": [
+          "fill-outline",
+          "inset-fill"
+        ]
+      },
+      {
+        "label": "stem",
+        "strokeIds": [
+          "stem"
+        ]
+      },
+      {
+        "label": "dot",
+        "strokeIds": [
+          "dot"
+        ]
+      },
+      {
+        "label": "noteheadHollow",
+        "strokeIds": [
+          "neighbor-left"
+        ]
+      },
+      {
+        "label": "noteheadHollow",
+        "strokeIds": [
+          "neighbor-right"
+        ]
+      },
+      {
+        "label": "noteheadHollow",
+        "strokeIds": [
+          "interrupted"
+        ]
+      },
+      {
+        "label": "unknown",
+        "strokeIds": [
+          "connected-glyph"
+        ]
+      },
+      {
+        "label": "unknown",
+        "strokeIds": [
+          "horizontal"
+        ]
+      }
+    ],
+    "events": []
+  }
+}
