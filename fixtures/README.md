@@ -63,6 +63,8 @@ Grouping tests pass raw synthetic strokes plus an explicitly authored observatio
 | Pencil-template-dev-1 | recorded | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5 |
 | Pencil-eval-session-2 | recorded, frozen evaluation | 1 | noteheadFilled: 5; noteheadHollow: 5; stem: 5; unknown: 5 |
 
+- `recorded/sample-fail.json` (`Sample-mixed-first-e4-rejected`, set `personal`, regression role): one real Pencil measure of six expected notes (E4 quarter, B4 whole, G4 half, E4 quarter, G4 half, B4 whole). With the `pencil-dev-v1` bank and singleton grouping, five notes are proposed correctly; the first E4's filled head is rejected as unknown (hollow 1.31 vs filled 1.39 distance), so those two strokes stay unresolved ink. This miss is a documented baseline, not tuned away. Raw ink is unchanged from the export; only the name, notes, and one primitive label (stroke 9 is a stem) were edited.
+
 - `runtime-review.json`: **synthetic template-derived/self-similar** review regression (quarter E4 + whole E4 + unsupported tap), not independent handwriting. Deliberately decreasing sample times and an overfull measure exercise raw preservation/explicit review, not native timing or duration resolution. See [runtime bank/review evidence](../docs/runtime-review.md).
 
 Total: 11 files, with expected primitive counts `noteheadFilled: 17`, `noteheadHollow: 26`, `stem: 30`, `dot: 1`, `unknown: 15`. Inventory counts include evaluation; automatic classification reports do not score it.

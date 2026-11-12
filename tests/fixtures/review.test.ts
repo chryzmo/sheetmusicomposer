@@ -148,3 +148,15 @@ it('keeps interrupted/unknown source ink unresolved; empty reviews never fabrica
   expect(review.assembly.unresolvedStrokeIds).toContain('review-head');
   expect(prepareMusicReview({ strokes: [] }, bank).candidates).toEqual([]);
 });
+
+// Real Pencil regression: the known miss is documented, not hidden or tuned away.
+it('proposes 5/6 notes on the recorded mixed sample; the rejected first filled head stays unresolved ink', () => {
+  const recorded = parseFixture(readFileSync(new URL('../../fixtures/recorded/sample-fail.json', import.meta.url), 'utf8'));
+  const ids = recorded.document.strokes.map((s) => s.id);
+  const review = prepareMusicReview(recorded.document, createRuntimeBank());
+  expect(review.grouping).toBe('singleton-fallback');
+  const proposed = review.candidates.map(({ note }) => ({ kind: note.kind, pitch: note.pitch, duration: note.duration,
+    dots: note.dots, accidental: note.accidental, strokeIds: note.strokeIds }));
+  expect(proposed).toEqual(recorded.expected.events.slice(1));
+  expect(review.assembly.unresolvedStrokeIds).toEqual([ids[0], ids[1]]);
+});

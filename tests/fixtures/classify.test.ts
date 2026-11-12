@@ -15,7 +15,7 @@ const observations = evaluatePrimitives(fixtures, bank);
 it('reports per-set/provenance confusion and rejection without claiming held-out accuracy', () => {
   const report = classificationReport(observations);
   console.info(report);
-  expect(observations).toHaveLength(54);
+  expect(observations).toHaveLength(64);
   expect(report).toContain('NOT held-out handwriting accuracy');
   expect(report).toContain('personal (recorded)');
   expect(report).toContain('synthetic-smoke (synthetic)');
