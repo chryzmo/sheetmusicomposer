@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, resolve, sep } from 'node:path';
 import { expect, it } from 'vitest';
 import { createBuiltinTemplates } from '../../src/recognize/builtins';
 import { classificationReport, evaluatePrimitives } from './classification';
 import { createDevelopmentTemplates, evaluateDevelopmentLeaveOneOut } from './development';
 import { loadFixtures } from './load';
-import { fixtureRole, fixtureRoot } from './roles';
+import { fixtureManifest, fixtureRole, fixtureRoot } from './roles';
 
 const fixtures = loadFixtures(fixtureRoot);
 const development = fixtures.filter(({ path }) => fixtureRole(path) === 'development');
@@ -47,10 +47,15 @@ it('detects source overlap without running recognition on reserved input', () =>
   // independently prove a separate session, writer diversity, or sample adequacy.
 });
 
-it('requires an explicit role for every file, including future imports', () => {
-  expect(fixtures.map(({ path }) => fixtureRole(path)).sort()).toEqual([
-    'development', 'evaluation', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression', 'regression',
-  ]);
+it('requires an explicit manifest entry for every file, including future imports', () => {
+  // Every fixture has an entry and every entry has a file, so a stale or missing one fails here.
+  const keys = fixtures.map(({ path }) => relative(fixtureRoot, resolve(path)).split(sep).join('/')).sort();
+  expect(Object.keys(fixtureManifest().fixtures).sort()).toEqual(keys);
+  // Exactly one development and one reserved evaluation recording; everything else is regression data.
+  const roles = fixtures.map(({ path }) => fixtureRole(path));
+  expect(roles.filter((role) => role === 'development')).toHaveLength(1);
+  expect(roles.filter((role) => role === 'evaluation')).toHaveLength(1);
+  expect(roles.every((role) => role === 'development' || role === 'evaluation' || role === 'regression')).toBe(true);
   expect(() => fixtureRole(join(fixtureRoot, 'recorded/unassigned.json'))).toThrow('Unassigned fixture role');
 });
 
