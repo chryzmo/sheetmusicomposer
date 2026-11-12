@@ -45,3 +45,14 @@ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT
 STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
+
+VexFlow 5.0.0 (notation rendering), MIT license:
+  Full copyright/permission notice: /licenses/vexflow-MIT.txt
+  Source: https://github.com/vexflow/vexflow
+
+Unmodified Bravura and Academico font data embedded by vexflow/bravura,
+SIL Open Font License 1.1:
+  /licenses/bravura-OFL.txt
+  /licenses/academico-OFL.txt
+  License sources: https://github.com/vexflow/vexflow-fonts
+Fonts are bundled locally; no external font CDN is required.

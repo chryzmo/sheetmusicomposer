@@ -83,6 +83,9 @@ export const config = {
   // Opt-in review processing cap, not an acceptance/accuracy threshold. Larger
   // pages remain ink; never truncate a page to manufacture a smaller review.
   reviewMaxPoints: 50000,
+  // Bound VexFlow/DOM preview work, not recognition acceptance. Refuse rather
+  // than silently displaying/keeping a truncated subset of proposals.
+  reviewMaxDisplayNotes: 32,
   // Musical document validation limits, not recognition/calibration settings.
   maxMusicMeasures: 1000,
   maxMusicIdLength: 256,

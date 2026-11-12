@@ -1,0 +1,45 @@
+# Experimental on-demand notation review
+
+The **Review notes** button now connects committed ink to the experimental classifier/assembler and VexFlow. It is opt-in, one-measure, human-reviewed functionality—not live transcription or a milestone-2 iPad acceptance claim.
+
+## Use it
+
+1. Keep a normal backup of valuable work. On a disposable page, write a filled head + separate stem (quarter), hollow head + separate stem (half), or isolated hollow head (whole), spaced horizontally.
+2. Lift the Pencil and tap **Review notes**. The named `pencil-dev-v1` single-writer development bank is visible. Its coverage is experimental; see [bank/evidence limits and known regression misses](runtime-review.md).
+3. Compare **Frozen original ink** with **All proposed notes**. Portrait layouts stack them; wide layouts place them beside each other. Clean spacing deliberately differs from raw spacing. Proposal numbers match the checkbox list; source-stroke numbers follow capture order. Unused/unresolved source ink is red; selected sources turn green. All original ink remains visible.
+4. Check only correct pitches/durations. Nothing is preselected. The time signature defaults to the existing single measure's signature, or 4/4 for ink-only pages; 3/4, 2/4, and 6/8 are also available. Duration totals use quarter-note units (6/8 capacity = 3), not metrical beat claims. Partial/overfull selections are allowed and explicitly warned; no rests or alternative durations are invented to fill a bar.
+5. **Keep selected notes** replaces the page's current musical events in one undoable command, retaining every raw stroke unchanged and marking every other source unresolved. It is not an additive merge with prior score corrections. The main canvas remains original ink; the footer shows current document event/unresolved counts, independently of the actual save-state indicator. Wait for Saved before reload. Undo/Redo retain exact IDs and music; reload retains music but starts fresh history. New ink conservatively invalidates saved events, and Undo restores them.
+6. **Cancel review** or Escape changes nothing. The sticky action bar keeps Cancel/Keep reachable while scrolling. Zero proposals/zero selections cannot be kept. Matching diagnostics are optional and label distance headroom as a heuristic, never percentage certainty.
+
+The review is a **re-read of original ink**, not a rendering of stored score corrections. Original-ink display is also retained after musical backup Restore/reload. Direct pitch/duration gestures, rest/flag/dot/accidental recognition, playback, and export remain later work.
+
+## Current grouping and scope
+
+ALL current app ink uses explicitly labeled **singleton fallback**: one captured stroke per primitive group. This app does not yet collect observation arrival clocks/beat regions, even for newly drawn ink. It never infers them from raw sample `t`. Multi-stroke heads or connected full-note glyphs may be missed. The pure temporal/spatial grouper and its synthetic metrics remain separate; they are not secretly enabled by this button.
+
+The whole page is reviewed as **one measure**. More than one stored measure is refused, not flattened. Refuse more than 256 singleton primitives, 50,000 raw points, or 32 proposed notes without truncating anything. These are processing/display caps, not accuracy thresholds. Work-limit errors leave the original document untouched. Unknown/interrupted/conflicting sources stay ink; no manual override of rejected primitives is supplied. Unsupported ledger strokes/nearby extra ink can block otherwise readable notes.
+
+## Scheduling and stale-state safety
+
+- `InkSurface.currentDocument()` reads committed immutable state **without** `snapshot()`'s pen interruption. Review is disabled during active contact and empty pages.
+- An explicit click opens a modal and posts validated committed data to a new same-origin worker. UI preflight runs before large structured-clone/SVG allocations; matching/classification/assembly run off the ink-render thread. No drawing-frame recognition or live timeout is introduced.
+- The worker returns diagnostics/proposals **without a cloned command base**. Only the matching request generation can be re-associated with its original main-thread document object. Every async worker/module/font boundary rechecks generation, exact source identity, contact state, and open/disposed state.
+- Cancel, disposal, committed document changes, or contact start terminate pending workers and invalidate rendering/selection. Returning to an identical prior document through Undo cannot reactivate a canceled generation. A new review starts unchecked. Policy/bank choices are fixed for this build; future runtime bank changes must invalidate generations too.
+- Keeping constructs caller UUIDs once and uses the validated snapshot-guarded score command. `InkSurface.applyReview()` independently refuses active contact and does not finalize/interrupt it. Callback updates still use ordinary autosave/revision-conflict/error behavior. A review action is not a claim that persistence has succeeded.
+- Worker, module, font, geometry, or cap failures disable confirmation and leave raw/model data unchanged; Cancel remains available. A failed dynamic module/font load may require reload before retry. No silent main-thread or CDN fallback is used.
+
+## VexFlow, fonts, and deployment
+
+VexFlow **5.0.0** is the planned notation dependency; no other package is added. The SVG renderer is lazy-imported only for a prepared review. `vexflow/bravura` embeds unmodified Bravura/Academico fonts locally; readiness is awaited before enabling confirmation. Do not call the library's CDN-fetching `loadFonts()`. Rendering uses a soft voice for partial/overfull proposals, no automatic beams/rest filling, and auto stem direction. A pure adapter maps written C0–B9 and whole/half/quarter durations, without transposition. SVG bounds expand for ledger notes/stems/annotations, with scrolling rather than clipping.
+
+The renderer/font chunk is about **720 kB minified / 388 kB gzip**; it is lazy, not startup notation work. The worker is about 41 kB before compression; the initial app chunk is about 43 kB before compression. Vite's >500 kB chunk warning is retained/documented, not suppressed. First-review transfer/font/render latency still needs actual iPad measurement; workers do not eliminate all main-thread SVG/font work. Cold offline startup/installation is not implemented yet. All chunks/fonts come from the app origin or embedded data; no external font/recognition service is required. Custom CSP must permit the app's same-origin modules/workers and embedded data fonts.
+
+Deployed `public/third-party-notices.txt` points to full VexFlow MIT and Bravura/Academico SIL OFL 1.1 copyright/licenses under `public/licenses/`. Font data is not modified. The npm lockfile fixes the installed library; the bank derivation check remains byte-exact.
+
+## Evidence and acceptance
+
+Unit tests cover written-pitch/duration mapping and partial/overfull/capacity totals. WebKit covers the actual worker → classifier → assembler → local-font VexFlow → explicit selection → guarded command → storage path, plus raw/reference preservation, no off-origin requests, unknown-only input, caps, all three durations, extreme ledger bounds, load failures, cancellation/late results, active contact, source replacement, same-base Undo invalidation, mixed history, reload, and subsequent ink invalidation.
+
+Browser positives are **existing template-derived/self-similar synthetic data and authored variants**, not new independent handwriting. No native Pencil/palm/performance acceptance or calibrated accuracy is implied. Primitive policy, template vectors, original fixtures/labels, and all existing regression metrics are unchanged. No evaluation recognition is rerun. The frozen-v1 guard additionally differs in dependency manifests now; reproduce at `558fa7d`, never refresh the historical hashes.
+
+Before enabling live recognition or advancing beyond this milestone, run the [iPad review acceptance checklist](ipad-testing.md#experimental-note-review--pending-native-acceptance), record device/OS/Pencil/revision, and report actual misses/wrong proposals separately from safe unknowns. Future integration still needs real observation clocks/regions, deliberate persistence/reload clock domains, and later correction gestures. Keep fixture expectations manual; saved proposals must never become ground truth automatically.

@@ -21,9 +21,10 @@
           <button id="download" type="button" disabled>Download backup</button>
           <button id="restore" type="button" disabled>Restore backup</button>
           <button id="record-fixture" type="button" disabled>Record fixture</button>
+          <button id="review-notes" type="button" disabled>Review notes</button>
           <input id="backup-file" type="file" accept=".json,application/json" aria-label="Choose sketch backup" hidden />
         </div>
-        <span class="milestone">Ink surface · in development</span>
+        <span class="milestone">Experimental note review</span>
       </header>
       <section class="workspace" aria-label="Music sketch workspace">
         <canvas id="score" aria-label="Music ink surface" aria-describedby="workspace-help" aria-disabled="true">
@@ -33,6 +34,7 @@
       <footer>
         <p id="workspace-help">Draw with Apple Pencil. Pan with one finger; pinch with two to zoom. Lift palm contacts before navigating. One sketch autosaves on this browser and origin; keep JSON backups.</p>
         <output id="ink-status" aria-live="polite">0 strokes</output>
+        <output id="music-status" aria-live="polite"></output>
         <output id="save-status" role="status">Loading sketch…</output>
         <button id="retry-save" type="button" hidden>Retry saving</button>
         <button id="keep-storage" type="button" hidden>Request persistent storage</button>

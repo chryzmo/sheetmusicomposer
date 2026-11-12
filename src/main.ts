@@ -3,6 +3,8 @@ import { historyShortcut } from './edit/shortcuts';
 import { attachFixtureRecorder } from './fixtures/recorder';
 import { attachInkSurface } from './ink/surface';
 import { createDocument } from './model/document';
+import { attachNoteReview } from './render/review-dialog';
+import type { NoteReviewUi } from './render/review-dialog';
 import { createAutosave, errorMessage } from './store/autosave';
 import type { SaveState } from './store/autosave';
 import { openSketchRepository } from './store/indexeddb';
@@ -18,6 +20,8 @@ function required<T extends Element>(selector: string): T {
 
 const canvas = required<HTMLCanvasElement>('#score');
 const status = required<HTMLOutputElement>('#ink-status');
+const musicStatus = required<HTMLOutputElement>('#music-status');
+let noteReview: NoteReviewUi | null = null;
 const saveStatus = required<HTMLOutputElement>('#save-status');
 const undoButton = required<HTMLButtonElement>('#undo');
 const redoButton = required<HTMLButtonElement>('#redo');
@@ -68,7 +72,7 @@ try {
   repository = null;
 }
 
-const musicNotice = ' Musical data is preserved, but this build displays original ink only. New ink clears saved note/rest events; Undo restores them.';
+const musicNotice = ' Musical data is preserved. The canvas displays original ink only; Review notes is an experimental re-read, not a display of stored score corrections. New ink clears saved note/rest events; Undo restores them.';
 if (initialDocument.measures !== undefined) backupStatus.textContent = `Musical backup loaded.${musicNotice}`;
 
 let saveState: SaveState = { kind: 'saved' };
@@ -106,8 +110,13 @@ const surface = attachInkSurface(canvas, ({ document, strokeCount, canUndo, canR
     lastDocument = document;
     autosave?.enqueue(document);
   }
+  musicStatus.textContent = document.measures === undefined ? '' : `Music: ${document.measures.reduce((n, m) => n + m.events.length, 0)} events in document; ${document.measures.reduce((n, m) => n + m.unresolvedStrokeIds.length, 0)} unresolved assigned strokes. Canvas retains original ink.`;
+  noteReview?.update({ document, isDrawing: drawing });
   showSaveStatus();
 }, diagnose, initialDocument);
+noteReview = attachNoteReview(required<HTMLButtonElement>('#review-notes'), surface, (notes, unresolved) => {
+  backupStatus.textContent = `Review kept ${notes} note${notes === 1 ? '' : 's'} with ${unresolved} unresolved stroke${unresolved === 1 ? '' : 's'}. All raw ink is preserved. Undo reverses this step; new ink invalidates music.`;
+}, events.signal);
 canvas.setAttribute('aria-disabled', 'false');
 fitButton.disabled = false;
 newButton.disabled = false;
@@ -125,7 +134,7 @@ undoButton.addEventListener('click', surface.undo, options);
 redoButton.addEventListener('click', surface.redo, options);
 retryButton.addEventListener('click', () => autosave?.retry(), options);
 document.addEventListener('keydown', (event) => {
-  if (event.defaultPrevented) return;
+  if (event.defaultPrevented || document.querySelector('dialog[open]')) return;
   const target = event.target;
   if (target instanceof HTMLElement && (target.isContentEditable || target.closest('input, textarea, select, dialog[open]'))) return;
   const action = historyShortcut(event);

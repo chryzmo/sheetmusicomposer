@@ -48,7 +48,7 @@ npm ci
 npm run test:recognition-eval
 ```
 
-Later assembly/grouping/model work adds shared configuration/fixture assignments and extends sketch/fixture decoders for musical storage. These sources are pinned, so the v1 guard deliberately rejects that newer checkout even though primitive policy values and the recorded first-run result are unchanged. Replay in a separate frozen worktree instead of refreshing hashes:
+Later assembly/grouping/model/review work adds shared configuration/fixture assignments, extends sketch/fixture decoders for musical storage, and adds notation dependency manifests. These sources are pinned, so the v1 guard deliberately rejects that newer checkout even though primitive policy values and the recorded first-run result are unchanged. Replay in a separate frozen worktree instead of refreshing hashes:
 
 ```sh
 git worktree add --detach ../sheetmusicomposer-pencil-v1 558fa7d
