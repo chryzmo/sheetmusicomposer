@@ -50,6 +50,19 @@ export const config = {
   // Initially support single-stroke stems only; multi-stroke groups remain ink
   // until reviewed examples justify a less restrictive rule.
   primitiveStemMaxStrokes: 1,
+  // Assembly guesses, NOT calibrated acceptance thresholds. Process one finished
+  // measure at a time; cap the quadratic attachment/blocker work explicitly.
+  assemblyMaxPrimitives: 256,
+  // Maximum Euclidean gap from an actual stem tip to the head's original bounds,
+  // in staff spaces. Both matching tips / competing heads or stems are rejected.
+  assemblyTipMaxGap: 0.25,
+  // Axis-wise staff-space clearance around each source primitive of a note.
+  // Extra ink inside this guard could change duration/pitch or be a gesture;
+  // this deliberately exceeds the attachment gap to withhold near misses too.
+  assemblyInkClearance: 0.5,
+  // Minimum horizontal gap between head bounds, in staff spaces. Overlapping
+  // columns are withheld rather than interpreted as chords/multiple voices.
+  assemblyHeadColumnClearance: 0.25,
   // Fixture annotation safety limits, not recognition thresholds.
   maxFixtureTextLength: 2000,
   maxFixtureDots: 2,
