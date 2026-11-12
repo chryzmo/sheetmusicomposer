@@ -1,0 +1,56 @@
+{
+  "format": "sheetmusicomposer-fixture-manifest",
+  "version": 1,
+  "fixtures": {
+    "recorded/a4-whole-x4.json": {
+      "role": "regression",
+      "session": "session-three-tests"
+    },
+    "recorded/c5-quarters-half-whole.json": {
+      "role": "regression",
+      "session": "session-three-tests"
+    },
+    "recorded/development/pencil-dev-1.json": {
+      "role": "development"
+    },
+    "recorded/e4-seven-notes.json": {
+      "role": "regression",
+      "session": "session-three-tests"
+    },
+    "recorded/evaluation/pencil-eval-1.json": {
+      "role": "evaluation"
+    },
+    "recorded/quarter-e4.json": {
+      "role": "regression",
+      "session": "session-quarter-e4"
+    },
+    "recorded/sample-fail.json": {
+      "role": "regression",
+      "session": "session-sample-fail"
+    },
+    "synthetic/classifier-boundaries.json": {
+      "role": "regression"
+    },
+    "synthetic/classifier-linearity.json": {
+      "role": "regression"
+    },
+    "synthetic/half-e4.json": {
+      "role": "regression"
+    },
+    "synthetic/primitive-grouping.json": {
+      "role": "regression"
+    },
+    "synthetic/quarter-c4.json": {
+      "role": "regression"
+    },
+    "synthetic/runtime-review.json": {
+      "role": "regression"
+    },
+    "synthetic/simple-note-assembly.json": {
+      "role": "regression"
+    },
+    "synthetic/unknown-mark.json": {
+      "role": "regression"
+    }
+  }
+}

@@ -1,34 +1,38 @@
+import { readFileSync } from 'node:fs';
 import { relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { decodeManifest } from './manifest';
+import type { FixtureRole, Manifest } from './manifest';
 
-export type FixtureRole = 'regression' | 'development' | 'evaluation';
+export type { FixtureRole } from './manifest';
 export const fixtureRoot = fileURLToPath(new URL('../../fixtures/', import.meta.url));
+export const manifestPath = fileURLToPath(new URL('./manifest.json', import.meta.url));
 
-/** Explicit repository assignments, never inferred from an imported set/name.
- * A new file needs a conscious role decision before CI can score it. Evaluation
- * files may be schema-validated/inventoried, but are excluded from automatic
- * classification and template selection until a later, frozen evaluation step.
+/** Roles and sessions come from `tests/fixtures/manifest.json`, never inferred
+ * from an imported set/name. A new file needs a conscious entry before CI can
+ * score it (`npm run fixtures:import` makes it). Evaluation files may be
+ * schema-validated/inventoried, but are excluded from automatic classification
+ * and template selection until a later, frozen evaluation step.
  */
-const roles: Readonly<Record<string, FixtureRole>> = {
-  'recorded/quarter-e4.json': 'regression',
-  'recorded/sample-fail.json': 'regression',
-  'recorded/a4-whole-x4.json': 'regression',
-  'recorded/c5-quarters-half-whole.json': 'regression',
-  'recorded/e4-seven-notes.json': 'regression',
-  'synthetic/quarter-c4.json': 'regression',
-  'synthetic/half-e4.json': 'regression',
-  'synthetic/unknown-mark.json': 'regression',
-  'synthetic/classifier-boundaries.json': 'regression',
-  'synthetic/classifier-linearity.json': 'regression',
-  'synthetic/simple-note-assembly.json': 'regression',
-  'synthetic/primitive-grouping.json': 'regression',
-  'synthetic/runtime-review.json': 'regression',
-  'recorded/development/pencil-dev-1.json': 'development',
-  'recorded/evaluation/pencil-eval-1.json': 'evaluation',
-};
+let cached: Manifest | null = null;
+export function fixtureManifest(): Manifest {
+  cached ??= decodeManifest(readFileSync(manifestPath, 'utf8'));
+  return cached;
+}
+
+function keyOf(path: string): string {
+  return relative(fixtureRoot, resolve(path)).split(sep).join('/');
+}
 
 export function fixtureRole(path: string): FixtureRole {
-  const key = relative(fixtureRoot, resolve(path)).split(sep).join('/');
-  if (!Object.hasOwn(roles, key)) throw new Error(`Unassigned fixture role: ${key}`);
-  return roles[key]!;
+  const key = keyOf(path);
+  const entry = Object.hasOwn(fixtureManifest().fixtures, key) ? fixtureManifest().fixtures[key] : undefined;
+  if (!entry) throw new Error(`Unassigned fixture role: ${key}`);
+  return entry.role;
+}
+
+/** The recording session of a fixture, or undefined (synthetic and role-reserved files have none). */
+export function fixtureSession(path: string): string | undefined {
+  const key = keyOf(path);
+  return Object.hasOwn(fixtureManifest().fixtures, key) ? fixtureManifest().fixtures[key]!.session : undefined;
 }

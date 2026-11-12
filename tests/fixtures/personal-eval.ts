@@ -87,7 +87,7 @@ function scoreEvents(fixtures: readonly LoadedFixture[], bank: ReviewBank): Even
   return { expected, proposedExactly, wrongProposals };
 }
 
-function scoreBank(fixtures: readonly LoadedFixture[], bank: ReviewBank): BankScore {
+export function scoreBank(fixtures: readonly LoadedFixture[], bank: ReviewBank): BankScore {
   return { primitives: scorePrimitives(fixtures, bank), events: scoreEvents(fixtures, bank) };
 }
 

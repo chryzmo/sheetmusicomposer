@@ -18,7 +18,7 @@ it('assigns a session to every recorded regression fixture and nothing else', ()
   // Development (already the built-in bank), evaluation (reserved), and synthetic ink are excluded.
   expect(sessions.some(({ path }) => ['development', 'evaluation'].includes(fixtureRole(path)))).toBe(false);
   const keys = new Set(all.map(({ path }) => relative(fixtureRoot, resolve(path)).split(sep).join('/')));
-  expect(assignedSessionPaths.filter((key) => !keys.has(key))).toEqual([]);
+  expect(assignedSessionPaths().filter((key) => !keys.has(key))).toEqual([]);
 });
 
 it('refuses a recorded regression fixture with no session instead of guessing one', () => {

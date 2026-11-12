@@ -58,7 +58,7 @@ Rules and limits:
 - Nothing is recognized and nothing is prefilled from Review notes: the answer key is what you tapped and confirmed, never recognizer output.
 - A tap selects the nearest stroke within a tolerance (`config.quickLabelTapDistance`), **preferring ink that is not yet in a note or the selection**, so a stem beside the next note's head, or overlapping outlines of one head, stay reachable. If only a labeled stroke is near, the tap says which note owns it.
 - A stem must be a single stroke; a multi-stroke stem, dots, accidentals, rests, and eighths are not supported here (use **Record fixture**).
-- The file still needs a `roles.ts` entry and, as a recorded regression fixture, a session in `tests/fixtures/personal-sessions.ts`; session export/import automation is a planned later step. Do not use the same strokes to train and to test: training strokes come from guided training, test measures from here.
+- Add the downloaded file with `npm run fixtures:import -- --session <id> <file>` (it records the role and session; see the [fixtures guide](../fixtures/README.md#adding-a-downloaded-file)). Do not use the same strokes to train and to test: training strokes come from guided training, test measures from here.
 
 ## Using personal samples in review (PR 3)
 
@@ -73,12 +73,12 @@ Rules and limits:
 `npm run test:fixtures` prints a report that simulates training from recorded fixtures and scores the built-in bank against the built-in plus personal bank on the same held-out ink. Code: `tests/fixtures/personal-eval.ts`, `personal-sessions.ts`, `personal.test.ts`.
 
 - **Simulated training uses the training screen's rules:** one complete stroke, the label's own geometry gates, the per-shape limit, manual fixture labels only (never recognizer output). Refused samples are listed in the report with the reason.
-- **Strict (primary):** leave-one-**session**-out. A held-out session is scored with samples from *other* sessions only. A session is one sitting of the writer, assigned by hand in `tests/fixtures/personal-sessions.ts` (never inferred from names or file times); measures drawn in the same sitting share a session because they are not independent. When unsure, merge into one session: coarser only makes the check stricter.
+- **Strict (primary):** leave-one-**session**-out. A held-out session is scored with samples from *other* sessions only. A session is one sitting of the writer, recorded in `tests/fixtures/manifest.json` by `fixtures:import --session` (never inferred from names or file times); measures drawn in the same sitting share a session because they are not independent. When unsure, merge into one session: coarser only makes the check stricter.
 - **Optimistic (for contrast):** leave-one-**fixture**-out, where other measures from the same sitting still train. It is printed only to show how much same-sitting reuse inflates results, and it is labeled NOT held out.
 - **Scored:** per-shape results on oracle groups (exact, wrong accepts, known rejects) and note-level results through the same singleton review the app uses (notes proposed exactly, wrong proposals). A fixture with no expected events is not scored for notes, since an empty list is not a claim of "no notes".
 - **Excluded:** the development fixture (already the built-in bank), the reserved evaluation fixture, and synthetic fixtures. The frozen `pencil-v1` evaluation files are untouched.
 - **One pre-stated safety rule, asserted per strict fold:** personal samples must not add wrong accepted shapes or wrong proposed notes that the built-in bank did not already make. This is the project's "unreadable ink stays ink" invariant, not an accuracy target. **No accuracy threshold is asserted**, so scores can be compared without a target chosen after seeing them.
-- **A new recorded fixture** needs a role (`roles.ts`) and, if it is a recorded regression fixture, a session (`personal-sessions.ts`) before the suite will run; that is a deliberate decision, as with roles.
+- **A new recorded fixture** needs a manifest entry (role and session) before the suite will run; `npm run fixtures:import -- --session <id> <file>` makes it. Choosing the session is the deliberate decision.
 
 ### First result (recorded fixtures at the time of this PR)
 

@@ -11,9 +11,10 @@ it('reports the new runtime bank separately from unchanged synthetic-bank baseli
   const observations = evaluatePrimitives(fixtures, createRuntimeBank().templates);
   console.info('Runtime bank pencil-dev-v1 — regression diagnostics, NOT independent/held-out handwriting accuracy. Template-derived runtime-review-self-derived positives are a separate set.');
   console.info(classificationReport(observations, 'pencil-dev-v1 recorded development bank (15 templates, builtin provenance)'));
-  expect(observations).toHaveLength(86);
+  expect(observations).toHaveLength(fixtures.reduce((total, { fixture }) => total + fixture.expected.primitives.length, 0));
+  // Authored synthetic sets are fixed, so they are pinned per set.
   const expected = [
-    ['classifier-boundaries', 4, 12], ['classifier-linearity', 6, 6], ['personal', 24, 34],
+    ['classifier-boundaries', 4, 12], ['classifier-linearity', 6, 6],
     ['primitive-grouping', 4, 9], ['runtime-review-self-derived', 4, 4],
     ['simple-note-assembly', 15, 16], ['synthetic-smoke', 3, 5],
   ] as const;
@@ -21,6 +22,18 @@ it('reports the new runtime bank separately from unchanged synthetic-bank baseli
     const rows = observations.filter((o) => o.set === set);
     expect(rows).toHaveLength(total);
     expect(rows.filter((o) => o.expected === o.result.label)).toHaveLength(exact);
+  }
+  // Recorded fixtures are pinned per fixture, by name: existing ones stay locked against
+  // regressions, while a newly imported fixture needs no edit here (it is reported above and
+  // held to the no-wrong-accepts rule below). Add it to this table to lock in its result.
+  const recordedPins = [
+    ['Quarter-e4', 1, 2], ['Sample-mixed-first-e4-rejected', 9, 10], ['Mixed-a4-whole-x4-third-rejected', 3, 4],
+    ['Mixed-c5-quarters-half-whole-two-rejected', 5, 7], ['Mixed-e4-seven-notes-four-rejected', 6, 11],
+  ] as const;
+  for (const [name, exact, total] of recordedPins) {
+    const rows = observations.filter((o) => o.fixtureName === name);
+    expect(rows, name).toHaveLength(total);
+    expect(rows.filter((o) => o.expected === o.result.label), name).toHaveLength(exact);
   }
   expect(observations.filter((o) => o.result.label !== 'unknown' && o.result.label !== o.expected)).toEqual([]);
   expect(observations.every((o) => o.set !== 'Pencil-eval-session-2' && o.set !== 'Pencil-template-dev-1')).toBe(true);

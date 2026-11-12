@@ -18,7 +18,18 @@ Fixtures pair original staff-space ink with **manually entered expectations**. T
 
 ## Adding a downloaded file
 
-Transfer the JSON to your development machine using Files or another method you trust. Review it, remove identifying notes, and copy it into `fixtures/recorded/`. Keep the original raw samples, IDs, order, completion, timestamps, pressure, and tilt unchanged; edit only expectations/metadata when correcting a label. `.gitattributes` disables line-ending normalization for recorded JSON, preserving original export bytes while allowing CRLF-aware whitespace checks and normal text diffs.
+Transfer the JSON to your development machine using Files or another method you trust, then import it:
+
+```sh
+npm run fixtures:import -- --session <id> path/to/fixture-a.json path/to/fixture-b.json
+npm run fixtures:import -- --dry-run --session <id> path/to/fixture.json   # preview only
+```
+
+The command validates each file with the real fixture decoder, copies it **byte for byte** to `fixtures/recorded/<name>.json` (original raw samples, IDs, order, completion, timestamps, pressure, and tilt are never rewritten, and `.gitattributes` keeps line endings as exported), records its role and session in `tests/fixtures/manifest.json`, and prints how the built-in bank reads it. It is all or nothing, refuses duplicate names, and never runs git. Review the file (remove identifying notes) and the `git status` diff, then commit.
+
+- **`--session` is required** and names the sitting: measures written in one go share an id; an unrelated sitting gets a new one. When unsure, reuse the earlier id (coarser only makes held-out evaluation stricter). The error lists the existing sessions.
+- Imports are always recorded **regression** fixtures. Development fixtures feed the built-in template bank and the evaluation fixture is reserved, so they are never imported by a flag; they need a reviewed change to the manifest and the pinned hashes.
+- Existing recorded results are pinned **per fixture** in `tests/fixtures/runtime-bank.test.ts`; a new fixture needs no edit there, but add its name to lock in its result once you have looked at it.
 
 ```sh
 npm run test:fixtures   # validation/round-trips, inventory, development classifier report
@@ -73,9 +84,9 @@ Grouping tests pass raw synthetic strokes plus an explicitly authored observatio
 
 - `runtime-review.json`: **synthetic template-derived/self-similar** review regression (quarter E4 + whole E4 + unsupported tap), not independent handwriting. Deliberately decreasing sample times and an overfull measure exercise raw preservation/explicit review, not native timing or duration resolution. See [runtime bank/review evidence](../docs/runtime-review.md).
 
-Recorded regression fixtures also need a recording session in `tests/fixtures/personal-sessions.ts`; see [personal templates](../docs/personal-templates.md) for the held-out report that uses them.
+Recorded regression fixtures also need a recording session (set by `fixtures:import --session`, stored in `tests/fixtures/manifest.json`); see [personal templates](../docs/personal-templates.md) for the held-out report that uses them.
 
-Total: 11 files, with expected primitive counts `noteheadFilled: 17`, `noteheadHollow: 26`, `stem: 30`, `dot: 1`, `unknown: 15`. Inventory counts include evaluation; automatic classification reports do not score it.
+The current file and primitive counts are printed by `npm run test:fixtures` (inventory) and change as fixtures are imported. Inventory counts include evaluation; automatic classification reports do not score it.
 
 Schema validation proves only source-reference integrity and lossless serialization. Separately, the experimental classifier report evaluates **oracle/manual groups**, not automatically recognized notes. The assembly suite separately uses explicit synthetic event truth and oracle primitive labels; it never treats empty event lists on real primitive-only recordings as an assertion of no notes. A frozen session-evaluation command is opt-in and separate from these development/regression results. It prints per-set/provenance confusion cells, exact label agreement, acceptance coverage, wrong accepts, rejected known labels, and unknown rejection. It is a development regression baseline, not a held-out benchmark. Existing annotations and original files are unchanged.
 
@@ -107,7 +118,7 @@ Both have empty expected-event lists and blank notes. The earlier, incorrectly g
 - Development: `15ec56101a055df9280e8e03bb50b4414b50c09316a0ce50629dcd0de60736b9`
 - Evaluation: `53abc2f6face9427fa206f39e6867199583eabc866cc0203c3908df000f87f2c`
 
-`tests/fixtures/roles.ts` explicitly assigns every repository fixture to `regression`, `development`, or `evaluation`. New files need a deliberate assignment. All files are schema-validated, inventoried, and round-tripped. The automatic classifier regression report selects only the six regression files. The development template adapter rejects regression/evaluation sources; its leave-one-group-out diagnostic removes the query's own template and does not silently add synthetic seeds. Duplicate recordings/source IDs are rejected. Source IDs and exact point arrays do not overlap between the two new exports; this checks simple copying, not independent proof of session separation or dataset adequacy.
+`tests/fixtures/manifest.json` explicitly assigns every repository fixture to `regression`, `development`, or `evaluation` (and recorded regression fixtures to a session); `roles.ts` reads it. New files need a deliberate entry, which `npm run fixtures:import` makes for recorded regression fixtures. All files are schema-validated, inventoried, and round-tripped. The automatic classifier regression report selects only the six regression files. The development template adapter rejects regression/evaluation sources; its leave-one-group-out diagnostic removes the query's own template and does not silently add synthetic seeds. Duplicate recordings/source IDs are rejected. Source IDs and exact point arrays do not overlap between the two new exports; this checks simple copying, not independent proof of session separation or dataset adequacy.
 
 ### Development diagnostics and candidate policy
 
