@@ -96,6 +96,9 @@ export const config = {
   maxMusicIdLength: 256,
   maxMusicDots: 2,
   // Fixture annotation safety limits, not recognition thresholds.
+  // How close a tap must land to a stroke, in staff spaces, to select it while
+  // labeling a test measure. A usability tolerance, not a recognition threshold.
+  quickLabelTapDistance: 0.8,
   maxFixtureTextLength: 2000,
   maxFixtureDots: 2,
 } as const;

@@ -116,6 +116,15 @@ New in this change. Automated WebKit tests use synthetic pointer events, so Penc
 - Try **Undo last**, **Skip this prompt**, **Clear drawing area**, and **Another round**. Check the saved counts, and that **Done** returns to a saved list that includes the new samples.
 - Note any stroke that was refused that you think was fine (and which prompt), any prompt that is hard to follow, and how it feels to use the staff area at its size (portrait and landscape).
 
+## Label measure (tap-to-label) — pending native acceptance
+
+For free-drawn test measures. Automated tests use synthetic taps and strokes; touch and Pencil taps on real ink need hand checks.
+
+- Write a short measure of your own music (a few notes, different lengths), at your normal size and speed. Include one stray mark you do not want labeled.
+- Tap **Label measure**. Tap each head, choose its length, then tap its stem. Check that taps land on the stroke you mean (including a stem right beside the next note's head), and that tapping again on a selected stroke or a labeled one explains what happened.
+- Check each suggested pitch against what you meant, using the dashed tick and the list; nudge any that are wrong. Note any pitch you had to correct (it shows where snapping disagrees with intent).
+- Download the fixture, confirm the Files copy, and check the stray mark became unknown ink. Time how long a measure takes to label compared with **Record fixture**, and note any step that is awkward on the iPad (target size, scrolling, the dialog moving as the prompt changes).
+
 ## Review with personal samples — pending native acceptance
 
 Review notes now reads your trained samples. Automated tests use synthetic ink, so whether your samples actually improve recognition has to be judged on the iPad.

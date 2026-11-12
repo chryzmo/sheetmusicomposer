@@ -12,6 +12,10 @@ Fixtures pair original staff-space ink with **manually entered expectations**. T
 6. Every stroke must be covered by a primitive or event. The same source stroke may appear once at each level (e.g. a head primitive and its assembled note). Primitive-only fixtures and event-only fixtures are allowed. Label ambiguous/unsupported ink `unknown`, with no event for that mark. Partial measures are allowed; totals are **not** checked against the time signature yet.
 7. Tap **Download fixture**, then verify that the iPad download/Files UI saved the JSON file. Close the recorder to continue drawing. Closing/Escape discards annotations; they are not autosaved. A fixture download does not replace your normal backup workflow, and **Restore backup** intentionally rejects fixture files.
 
+## Quick labeling of free-drawn measures
+
+**Label measure** (toolbar) labels a freely written measure by tapping: head, length, stem, with the pitch suggested from the head's position and nudged if needed. It writes the same version-1 fixture, with unclaimed strokes as `unknown`. See [personal templates](../docs/personal-templates.md#tap-to-label-for-free-drawn-test-measures). **Record fixture** remains for stems drawn in several strokes and anything the quick mode cannot express.
+
 ## Adding a downloaded file
 
 Transfer the JSON to your development machine using Files or another method you trust. Review it, remove identifying notes, and copy it into `fixtures/recorded/`. Keep the original raw samples, IDs, order, completion, timestamps, pressure, and tilt unchanged; edit only expectations/metadata when correcting a label. `.gitattributes` disables line-ending normalization for recorded JSON, preserving original export bytes while allowing CRLF-aware whitespace checks and normal text diffs.

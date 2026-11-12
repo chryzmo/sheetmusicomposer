@@ -1,6 +1,7 @@
 import { config } from './config';
 import { historyShortcut } from './edit/shortcuts';
 import { attachFixtureRecorder } from './fixtures/recorder';
+import { attachQuickLabel } from './fixtures/quick-label-dialog';
 import { attachInkSurface } from './ink/surface';
 import { createDocument } from './model/document';
 import { attachNoteReview } from './render/review-dialog';
@@ -169,6 +170,7 @@ function downloadJson(text: string, filename: string): void {
   setTimeout(() => { URL.revokeObjectURL(url); urls.delete(url); }, 60000);
 }
 attachFixtureRecorder(required<HTMLButtonElement>('#record-fixture'), surface.snapshot, downloadJson, events.signal);
+attachQuickLabel(required<HTMLButtonElement>('#label-measure'), surface.snapshot, downloadJson, events.signal);
 downloadButton.addEventListener('click', () => {
   const current = surface.snapshot();
   const text = serializeBackup(current);
