@@ -149,14 +149,22 @@ it('keeps interrupted/unknown source ink unresolved; empty reviews never fabrica
   expect(prepareMusicReview({ strokes: [] }, bank).candidates).toEqual([]);
 });
 
-// Real Pencil regression: the known miss is documented, not hidden or tuned away.
-it('proposes 5/6 notes on the recorded mixed sample; the rejected first filled head stays unresolved ink', () => {
-  const recorded = parseFixture(readFileSync(new URL('../../fixtures/recorded/sample-fail.json', import.meta.url), 'utf8'));
-  const ids = recorded.document.strokes.map((s) => s.id);
+// Real Pencil regressions: known misses are documented baselines, not tuned away.
+// `proposed` lists the expected-event indices the current bank/singleton pipeline reproduces.
+// Every other event gets no proposal (its strokes stay unresolved ink); nothing wrong is proposed.
+it.each([
+  ['sample-fail.json', [1, 2, 3, 4, 5]],
+  ['a4-whole-x4.json', [0, 1, 3]],
+  ['c5-quarters-half-whole.json', [0, 3]],
+  ['e4-seven-notes.json', [1, 3, 6]],
+] as const)('recorded %s: proposes only the documented correct notes and never a wrong one', (file, proposed) => {
+  const recorded = parseFixture(readFileSync(new URL(`../../fixtures/recorded/${file}`, import.meta.url), 'utf8'));
   const review = prepareMusicReview(recorded.document, createRuntimeBank());
   expect(review.grouping).toBe('singleton-fallback');
-  const proposed = review.candidates.map(({ note }) => ({ kind: note.kind, pitch: note.pitch, duration: note.duration,
+  const emitted = review.candidates.map(({ note }) => ({ kind: note.kind, pitch: note.pitch, duration: note.duration,
     dots: note.dots, accidental: note.accidental, strokeIds: note.strokeIds }));
-  expect(proposed).toEqual(recorded.expected.events.slice(1));
-  expect(review.assembly.unresolvedStrokeIds).toEqual([ids[0], ids[1]]);
+  expect(emitted).toEqual(proposed.map((i) => recorded.expected.events[i]));
+  const covered = new Set(proposed.flatMap((i) => recorded.expected.events[i]!.strokeIds));
+  const unresolved = recorded.document.strokes.map(({ id }) => id).filter((id) => !covered.has(id));
+  expect([...review.assembly.unresolvedStrokeIds].sort()).toEqual(unresolved.sort());
 });
