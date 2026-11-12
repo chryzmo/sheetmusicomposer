@@ -192,8 +192,9 @@ test('notation chunk failure leaves the sketch intact and confirmation disabled'
 });
 
 test('a local font readiness failure is not treated as a successful preview', async ({ page }) => {
+  // Patch the prototype before any page script runs; WebKit ignores an instance-level override.
+  await page.addInitScript(() => { FontFaceSet.prototype.load = () => Promise.reject(new Error('test font unavailable')); });
   await openSketch(page); await upload(page);
-  await page.evaluate(() => { document.fonts.load = () => Promise.reject(new Error('test font unavailable')); });
   await page.getByRole('button', { name: 'Review notes', exact: true }).click();
   await expect(page.locator('#review-status')).toContainText('test font unavailable');
   await expect(keep(page)).toBeDisabled(); await cancel(page).click();
