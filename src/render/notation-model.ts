@@ -16,3 +16,16 @@ export function reviewDuration(durations: readonly SimpleDuration[], signature: 
   const [numerator, denominator] = signature.split('/').map(Number);
   return { units, target: numerator! * 4 / denominator! };
 }
+
+export type ReviewDurationState = 'empty' | 'under' | 'match' | 'over';
+
+/** Display wording for a selected total. The leading word carries the state so
+ * it is never conveyed by color alone. No repair is offered or implied.
+ */
+export function reviewDurationMessage(units: number, target: number, signature: TimeSignature): { state: ReviewDurationState; text: string } {
+  const unit = (n: number): string => `${n} quarter-note unit${n === 1 ? '' : 's'}`;
+  if (units === 0) return { state: 'empty', text: `No notes selected. A ${signature} measure holds ${unit(target)}.` };
+  if (units < target) return { state: 'under', text: `Underfull: ${units} of ${unit(target)} in ${signature}; ${unit(target - units)} short. No rests or durations are added automatically.` };
+  if (units > target) return { state: 'over', text: `Overfull: ${unit(units)} selected but a ${signature} measure holds ${target}; ${unit(units - target)} over. Durations are not repaired automatically.` };
+  return { state: 'match', text: `Total matches: ${unit(units)} in ${signature}. This does not prove the notes are correct.` };
+}
