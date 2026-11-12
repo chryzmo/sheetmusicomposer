@@ -1,12 +1,12 @@
 # Personal templates (milestone 7)
 
-Status: **PR 2 of 4.** Samples can be trained, stored, listed, and deleted on the device. **They are not used by Review notes yet** (PR 3), so recognition is unchanged.
+Status: **PR 3 of 4.** Samples can be trained, stored, listed, and deleted on the device, and **Review notes now uses them** together with the built-in bank. Automatic canvas recognition still does not exist.
 
 ## Plan
 
 1. **Model (this PR):** validated sample format, merge with the built-in bank, bank identity, tie-break rule, limits. DOM-free, in `src/recognize/user-templates.ts`.
 2. **Storage and training screen (this PR):** IndexedDB repository (database version 2) and the **Personal templates** screen. Covered by real WebKit end-to-end tests.
-3. **Wire into review:** the worker receives the merged bank; any template change invalidates in-flight reviews; diagnostics show user vs built-in matches.
+3. **Wire into review (this PR):** see below.
 4. **Evaluation:** a leave-one-session-out report, so training on one's own samples never becomes the only measure.
 
 ## Rules fixed by this PR
@@ -32,3 +32,11 @@ A throwaway experiment (not committed) added the other recorded files' primitive
 - **Database:** the shared database moves to **version 2**, adding a `templates` store; existing sketches are untouched by the upgrade (tested by upgrading a real version-1 database). A tab running older code that opens the upgraded database reports storage unavailable rather than risking data. Templates open independently of the sketch: if they are unavailable, drawing, saving, and review work as before and the screen says so.
 - **Damaged records** are ignored and listed with their reason, and can be removed with one button.
 - **Not included yet:** exporting/importing templates (website data can be cleared, which deletes them), a dedicated training canvas separate from the sketch, and multi-stroke samples. Backups of sketches do not include templates.
+
+## Using personal samples in review (PR 3)
+
+- **When read:** at each **Review notes** tap, the main thread reads the stored samples fresh (so multi-tab changes are seen), shows the bank, and sends the validated samples to the worker. The worker builds the merged bank and prepares the clouds off the ink-render thread.
+- **Visible:** the dialog names the bank (`pencil-dev-v1`, or `pencil-dev-v1+user-N-<hash>`), the number of personal samples, and how many stored records were damaged and ignored. A proposal is marked when the closest template for any of its shapes was one of your samples; the diagnostics list each template ID and its `builtin`/`user` source.
+- **Invalidation:** Keep re-reads storage and compares bank identities. If the samples changed since the preview (another tab, a reset), nothing is kept and the dialog asks you to review again. Within one tab the training screen and the review are both modal, so they cannot overlap. A cancelled or replaced review still cannot be revived, as before.
+- **Failure behavior:** if a stored sample read fails, or a sample cannot be turned into a template, review **fails closed** with a message (it never silently reviews with a different bank). If the template store cannot open at all, review uses the built-in samples only and says so on screen.
+- **Priority** is unchanged from PR 1: pooled distance ranking, a personal template wins only an exact tie. Whether personal samples *help* on held-out handwriting is not established by this PR; the evaluation step (PR 4) measures that.

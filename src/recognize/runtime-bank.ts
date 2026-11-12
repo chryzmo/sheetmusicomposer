@@ -10,6 +10,8 @@ export interface RuntimeBank {
     readonly role: 'development'; readonly provenance: 'recorded' };
   readonly templates: readonly PointCloudTemplate<SimplePrimitive>[];
 }
+/** Identity of the built-in bank; personal-template bank IDs extend it. */
+export const runtimeBankId = 'pencil-dev-v1' as const;
 const labels = ['noteheadFilled', 'noteheadHollow', 'stem'] as const;
 const sourcePath = 'fixtures/recorded/development/pencil-dev-1.json';
 const sourceHash = '15ec56101a055df9280e8e03bb50b4414b50c09316a0ce50629dcd0de60736b9';

@@ -7,8 +7,18 @@ import { assembleSimpleNotes } from './assemble';
 import type { SimpleAssembly, SimpleNoteCandidate } from './assemble';
 import { classifyPrimitive } from './classify';
 import type { PrimitiveClassification } from './classify';
-import type { RuntimeBank } from './runtime-bank';
+import type { SimplePrimitive } from './primitives';
+import type { PointCloudTemplate } from './templates';
 
+/** What a review needs from a template bank: the built-in bank, or built-in plus
+ * personal samples (see mergeTemplateBank). The ID changes when templates do.
+ */
+export interface ReviewBank {
+  readonly id: string;
+  readonly templates: readonly PointCloudTemplate<SimplePrimitive>[];
+  /** IDs of personal samples in `templates`; absent for the built-in bank. */
+  readonly userSampleIds?: readonly string[];
+}
 export interface ReviewGroup { readonly strokeIds: readonly string[] }
 export interface ReviewCandidate {
   readonly note: SimpleNoteCandidate;
@@ -21,7 +31,9 @@ export interface ReviewCandidate {
 export interface MusicReview {
   /** Immutable validated base; command application requires this exact object. */
   readonly base: SketchDocument;
-  readonly bankId: RuntimeBank['id'];
+  readonly bankId: string;
+  /** Personal samples that were in the bank for this review (0 for built-in only). */
+  readonly userSampleCount: number;
   readonly grouping: 'explicit-partition' | 'singleton-fallback';
   readonly supportPolicy: { readonly id: 'distance-headroom-v1'; readonly maxDistance: number; readonly sampleCount: number };
   readonly classifications: readonly PrimitiveClassification[];
@@ -50,7 +62,7 @@ export function distanceHeadroom(distances: readonly number[]): number {
  * The caller owns active-contact, region readiness, policy-generation, and
  * asynchronous scheduling guards. Bases/banks/results follow immutable contracts.
  */
-export function prepareMusicReview(base: SketchDocument, bank: RuntimeBank, groups?: readonly ReviewGroup[]): MusicReview {
+export function prepareMusicReview(base: SketchDocument, bank: ReviewBank, groups?: readonly ReviewGroup[]): MusicReview {
   if ((base.measures?.length ?? 0) > 1) throw new Error('Review supports one-measure pages only');
   const partition = groups ?? base.strokes.map((s) => ({ strokeIds: [s.id] }));
   if (partition.length > config.assemblyMaxPrimitives) throw new Error('Review exceeds primitive work limit');
@@ -79,7 +91,7 @@ export function prepareMusicReview(base: SketchDocument, bank: RuntimeBank, grou
     if (evidence.some((p) => p.label === 'unknown' || p.rejection !== null || p.candidates[0]?.label !== p.label)) throw new Error('Assembly references rejected classification');
     return { note, evidence, shapeSupport: distanceHeadroom(evidence.map((p) => p.candidates[0]!.distance)) };
   });
-  return { base, bankId: bank.id, grouping: groups === undefined ? 'singleton-fallback' : 'explicit-partition',
+  return { base, bankId: bank.id, userSampleCount: bank.userSampleIds?.length ?? 0, grouping: groups === undefined ? 'singleton-fallback' : 'explicit-partition',
     supportPolicy: { id: 'distance-headroom-v1', maxDistance: config.primitiveMaxDistance, sampleCount: config.pointCloudSampleCount },
     classifications, assembly, candidates };
 }

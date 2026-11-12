@@ -125,7 +125,7 @@ const surface = attachInkSurface(canvas, ({ document, strokeCount, canUndo, canR
 }, diagnose, initialDocument);
 noteReview = attachNoteReview(required<HTMLButtonElement>('#review-notes'), surface, (notes, unresolved) => {
   backupStatus.textContent = `Review kept ${notes} note${notes === 1 ? '' : 's'} with ${unresolved} unresolved stroke${unresolved === 1 ? '' : 's'}. All raw ink is preserved. Undo reverses this step; new ink invalidates music.`;
-}, events.signal);
+}, events.signal, { load: templateRepository ? () => templateRepository!.load() : null, unavailableReason: templateError });
 attachTemplateTraining(required<HTMLButtonElement>('#train-templates'), surface.snapshot, templateRepository, templateError, events.signal);
 canvas.setAttribute('aria-disabled', 'false');
 fitButton.disabled = false;

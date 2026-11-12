@@ -5,9 +5,20 @@ import type { TimeSignature } from '../model/music';
 import type { SketchDocument } from '../model/document';
 import { reviewedMusicCommand } from '../recognize/review';
 import type { MusicReview } from '../recognize/review';
+import { runtimeBankId } from '../recognize/runtime-bank';
+import { templateBankIdentity } from '../recognize/user-templates';
+import type { LoadedTemplates } from '../store/template-store';
 import { drawInkReference } from './ink-reference';
 import type { ReviewRequest, ReviewResponse } from './review-protocol';
 import { reviewDuration, reviewDurationMessage } from './notation-model';
+
+/** Where review reads personal samples. `load` is null when template storage could
+ * not open; review then uses the built-in samples only and says so.
+ */
+export interface ReviewTemplateSource {
+  readonly load: (() => Promise<LoadedTemplates>) | null;
+  readonly unavailableReason: string;
+}
 
 export interface NoteReviewUi { update: (state: Pick<InkSurfaceStatus, 'document' | 'isDrawing'>) => void }
 
@@ -16,14 +27,14 @@ export interface NoteReviewUi { update: (state: Pick<InkSurfaceStatus, 'document
  * every asynchronous boundary; no cloned worker base can become a command base.
  */
 export function attachNoteReview(button: HTMLButtonElement, surface: InkSurface,
-  onKept: (notes: number, unresolved: number) => void, signal: AbortSignal): NoteReviewUi {
+  onKept: (notes: number, unresolved: number) => void, signal: AbortSignal, templates: ReviewTemplateSource): NoteReviewUi {
   const dialog = document.createElement('dialog');
   dialog.id = 'note-review'; dialog.setAttribute('aria-labelledby', 'note-review-title');
   dialog.innerHTML = `
     <h2 id="note-review-title">Review proposed notes</h2>
     <div class="tools review-actions"><button id="review-keep" type="button" disabled>Keep selected notes</button>
       <button id="review-close" type="button" autofocus>Cancel review</button></div>
-    <p>Experimental bank: <strong>pencil-dev-v1</strong> (15 single-writer development samples). Whole, half, and quarter notes only.</p>
+    <p id="review-bank">Experimental bank: <strong>pencil-dev-v1</strong> (15 single-writer development samples). Whole, half, and quarter notes only.</p>
     <p>Re-reads the whole page as <strong>one measure</strong>. Keeping checked notes replaces its current music, not its ink. Cancel leaves the sketch unchanged.</p>
     <details><summary>Recognition limits and evidence policy</summary>
       <p>Singleton fallback: each original stroke is classified separately. No arrival clocks or fragment joins are invented. Multi-stroke heads may be missed. This is not universal handwriting coverage.</p>
@@ -48,6 +59,7 @@ export function attachNoteReview(button: HTMLButtonElement, surface: InkSurface,
   };
   const signature = get<HTMLSelectElement>('#review-signature');
   for (const value of timeSignatures) { const option = document.createElement('option'); option.value = value; option.textContent = value; signature.append(option); }
+  const bankNote = get<HTMLParagraphElement>('#review-bank');
   const status = get<HTMLOutputElement>('#review-status'), duration = get<HTMLParagraphElement>('#review-duration');
   const choices = get<HTMLDivElement>('#review-choices'), notation = get<HTMLDivElement>('.review-notation');
   const ink = get<SVGSVGElement>('.review-ink'), keep = get<HTMLButtonElement>('#review-keep');
@@ -110,6 +122,12 @@ export function attachNoteReview(button: HTMLButtonElement, surface: InkSurface,
       pre.textContent = `Shape support: ${candidate.shapeSupport.toFixed(4)} (distance headroom only)\n` +
         candidate.evidence.map((p) => `${p.label}: strokes ${p.strokeIds.map((id) => numbers.get(id)).join(', ')}; label gap ${p.margin?.toFixed(4)}; linearity ${p.linearityRatio.toFixed(4)}\n` +
           p.candidates.map((c) => `  ${c.label}: distance ${c.distance.toFixed(4)}; ${c.templateId}; ${c.source.kind}; geometry ${c.geometryRejections.join(', ') || 'passes'}`).join('\n')).join('\n');
+      // Provenance of the closest template per shape: personal or built-in.
+      if (candidate.evidence.some((p) => p.candidates[0]?.source.kind === 'user')) {
+        const note = document.createElement('small'); note.className = 'review-personal';
+        note.textContent = 'Closest match was one of your personal samples.';
+        row.append(note);
+      }
       details.append(summary, pre); row.append(details); choices.append(row);
     });
   };
@@ -135,6 +153,16 @@ export function attachNoteReview(button: HTMLButtonElement, surface: InkSurface,
   };
   signature.addEventListener('change', () => { if (prepared && current(generation, prepared.base)) void render(prepared, generation); }, options);
 
+  const describeBank = (id: string, personal: number, skipped: number, unavailable: string): void => {
+    bankNote.replaceChildren();
+    const bold = document.createElement('strong'); bold.textContent = id;
+    bankNote.append('Bank: ', bold, personal === 0 && unavailable === ''
+      ? ' (15 built-in single-writer development samples; no personal samples). '
+      : unavailable !== '' ? ` (built-in samples only: personal templates are unavailable, ${unavailable}). `
+        : ` (15 built-in samples plus ${personal} personal sample${personal === 1 ? '' : 's'}). `,
+      skipped > 0 ? `${skipped} stored template record${skipped === 1 ? ' was' : 's were'} damaged and ignored. ` : '',
+      'Whole, half, and quarter notes only.');
+  };
   button.addEventListener('click', () => {
     if (drawing || dialog.open || signal.aborted) return;
     const base = surface.currentDocument(), token = ++generation;
@@ -147,6 +175,27 @@ export function attachNoteReview(button: HTMLButtonElement, surface: InkSurface,
       if (base.strokes.length > config.assemblyMaxPrimitives) throw new Error('Review exceeds primitive work limit');
       if (base.strokes.reduce((sum, s) => sum + s.points.length, 0) > config.reviewMaxPoints) throw new Error('Review exceeds point work limit');
       paths = drawInkReference(ink, base, new Set(base.strokes.map((s) => s.id)));
+      void startWorker(base, token);
+    } catch (error) {
+      stopWorker(); status.textContent = `Review unavailable: ${error instanceof Error ? error.message : String(error)}. Current sketch unchanged.`;
+    }
+  }, options);
+  /** Reads personal samples fresh for THIS review, then starts the worker. A read
+   * failure fails closed (no review) rather than quietly using a different bank.
+   */
+  const startWorker = async (base: SketchDocument, token: number): Promise<void> => {
+    try {
+      bankNote.textContent = 'Bank: loading personal templates…';
+      let loaded: LoadedTemplates = { samples: [], skipped: [] };
+      if (templates.load) {
+        try { loaded = await templates.load(); }
+        catch (error) {
+          if (current(token, base)) status.textContent = `Review unavailable: could not read personal templates: ${error instanceof Error ? error.message : String(error)}. Current sketch unchanged.`;
+          return;
+        }
+        if (!current(token, base)) return;
+      }
+      describeBank(templateBankIdentity(runtimeBankId, loaded.samples), loaded.samples.length, loaded.skipped.length, templates.load ? '' : templates.unavailableReason);
       const job = new Worker(new URL('./review-worker.ts', import.meta.url), { type: 'module' });
       worker = job;
       job.onmessage = (event: MessageEvent<ReviewResponse>) => {
@@ -164,14 +213,35 @@ export function attachNoteReview(button: HTMLButtonElement, surface: InkSurface,
         if (!current(token, base) || worker !== job) return;
         stopWorker(); status.textContent = 'Review worker failed. Current sketch unchanged; cancel to return to ink.';
       };
-      job.postMessage({ token, document: base } satisfies ReviewRequest);
+      job.postMessage({ token, document: base, samples: loaded.samples } satisfies ReviewRequest);
     } catch (error) {
-      stopWorker(); status.textContent = `Review unavailable: ${error instanceof Error ? error.message : String(error)}. Current sketch unchanged.`;
+      stopWorker(); if (current(token, base)) status.textContent = `Review unavailable: ${error instanceof Error ? error.message : String(error)}. Current sketch unchanged.`;
     }
-  }, options);
+  };
   keep.addEventListener('click', () => {
     const review = prepared;
     if (!ready || !review || !current(generation, review.base) || selected().length === 0) return;
+    // Personal templates are a recognition input: if they changed since this
+    // preview (another tab, or anything else), the proposals no longer describe
+    // what a new review would show, so refuse rather than keep stale proposals.
+    const token = generation;
+    keep.disabled = true;
+    void (async () => {
+      if (templates.load) {
+        let latest: LoadedTemplates;
+        try { latest = await templates.load(); }
+        catch (error) { if (current(token, review.base) && prepared === review) invalidate(`Could not confirm personal templates: ${error instanceof Error ? error.message : String(error)}. Close and review again.`); return; }
+        if (!current(token, review.base) || prepared !== review) return;
+        if (templateBankIdentity(runtimeBankId, latest.samples) !== review.bankId) {
+          invalidate('Personal templates changed since this preview. Close it and review again so proposals use the current samples. Nothing was kept.');
+          return;
+        }
+      }
+      keepSelected(review);
+    })();
+  }, options);
+  const keepSelected = (review: MusicReview): void => {
+    if (!ready || !current(generation, review.base) || selected().length === 0) { keep.disabled = false; refreshSelection(); return; }
     try {
       const selection = selected().map((candidateIndex) => ({ candidateIndex, eventId: crypto.randomUUID() }));
       const command = reviewedMusicCommand(review, { kind: 'user-reviewed', measureId: review.base.measures?.[0]?.id ?? crypto.randomUUID(),
@@ -182,7 +252,7 @@ export function attachNoteReview(button: HTMLButtonElement, surface: InkSurface,
     } catch (error) {
       invalidate(`Could not keep review: ${error instanceof Error ? error.message : String(error)}. Close and review again.`);
     }
-  }, options);
+  };
   signal.addEventListener('abort', () => { invalidate(''); dialog.remove(); prepared = null; paths.clear(); inputs = []; }, { once: true });
   updateButton();
   return { update: (state) => {

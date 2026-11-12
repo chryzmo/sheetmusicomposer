@@ -4,9 +4,10 @@ import { config } from '../config';
 import { parseFixture } from '../fixtures/schema';
 import type { Stroke } from '../ink/types';
 import { classifyPrimitive } from './classify';
+import { prepareMusicReview } from './review';
 import { createRuntimeBank } from './runtime-bank';
 import {
-  checkCanAdd, decodeUserTemplateRecords, decodeUserTemplateSample, encodeUserTemplateSample, mergeTemplateBank, userTemplates,
+  checkCanAdd, decodeUserTemplateRecords, decodeUserTemplateSample, encodeUserTemplateSample, mergeTemplateBank, templateBankIdentity, userTemplates,
 } from './user-templates';
 import type { UserTemplateSample } from './user-templates';
 
@@ -139,4 +140,32 @@ it('lets personal samples change a documented rejection, without breaking an exi
   expect(after.label).toBe('noteheadHollow');
   const accepted = classifyPrimitive(strokesFor(c5, c5.expected.primitives[3]!.strokeIds), merged.templates);
   expect(accepted.label).toBe('stem');
+});
+
+it('computes the same bank identity from sample metadata alone as the full merge does', () => {
+  const builtin = createRuntimeBank(), samples = samplesFrom('sample-fail');
+  expect(templateBankIdentity(builtin.id, [])).toBe(builtin.id);
+  for (const subset of [samples, samples.slice(0, 3), [...samples].reverse(), [samples[2]!]]) {
+    const metadata = subset.map(({ id, label, createdAt }) => ({ id, label, createdAt }));
+    expect(templateBankIdentity(builtin.id, metadata)).toBe(mergeTemplateBank(builtin, subset).id);
+  }
+});
+
+// Mechanics only (same-session ink, not accuracy): the review accepts the merged bank,
+// reports its identity and personal count, and a built-in-only review is unchanged.
+it('reviews with a merged bank, reporting bank identity and personal sample count', () => {
+  const builtin = createRuntimeBank(), c5 = load('c5-quarters-half-whole');
+  const builtinOnly = prepareMusicReview(c5.document, builtin);
+  expect(builtinOnly.bankId).toBe('pencil-dev-v1');
+  expect(builtinOnly.userSampleCount).toBe(0);
+  const others = ['sample-fail', 'a4-whole-x4', 'e4-seven-notes'].flatMap((name) => samplesFrom(name).map((s) => ({ ...s, id: `${name}/${s.id}` })));
+  const merged = mergeTemplateBank(builtin, others);
+  const personal = prepareMusicReview(c5.document, merged);
+  expect(personal.bankId).toBe(merged.id);
+  expect(personal.userSampleCount).toBe(others.length);
+  const proposed = (review: typeof personal) => review.candidates.map(({ note }) => note.strokeIds.join());
+  // Every note the built-in bank proposed is still proposed, and the personal bank adds at least one.
+  for (const ids of proposed(builtinOnly)) expect(proposed(personal)).toContain(ids);
+  expect(personal.candidates.length).toBeGreaterThan(builtinOnly.candidates.length);
+  expect(personal.candidates.some(({ evidence }) => evidence.some((p) => p.candidates[0]?.source.kind === 'user'))).toBe(true);
 });
