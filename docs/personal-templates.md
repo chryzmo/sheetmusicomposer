@@ -44,6 +44,22 @@ The Personal templates screen has **Start guided training**: the app names what 
 - **Labels are the prompt, i.e. what you were asked to draw.** They are never recognizer output. A mislabeled sample (you drew a hollow head for a filled prompt) is not detected beyond the shape gates, so keep to the prompt.
 - **Not included yet:** copying whole measures, tap-to-label annotation for free-drawn test measures, and session export/import. The plan is in the project notes: test measures should be free-drawn, since that is how the app will be used.
 
+## Tap-to-label for free-drawn test measures
+
+Training data from guided prompts is only worth having if it helps on **your own music**, so the test data has to be free-drawn. **Label measure** (toolbar) labels such a measure by tapping instead of typing stroke numbers:
+
+1. Draw a measure freely on the sketch, then tap **Label measure**. It works on a frozen copy; the sketch and its undo history are untouched.
+2. Tap a note's **head** (several strokes if the head has several), choose **Whole / Half / Quarter**, then tap its **stem** (a whole note has none). About three taps per note.
+3. The **pitch** is suggested from where the head sits, using the same snapping as recognition (`pitchAtStaffY`). A dashed tick on the staff and the note list show it; nudge it up or down if you meant another note. For the recorded measures so far, the suggestion equals the hand-entered pitch for all 21 notes, so it is a good default; because it is the *same rule* as recognition, snapping errors only show up in a fixture if the labeler corrects them.
+4. **Download fixture.** Primitives and events are derived: whole = hollow head; half = hollow head + stem; quarter = filled head + stem. Events run **left to right by notehead**. Every stroke no note claimed is saved as its own `unknown` primitive with no event (red ink until labeled).
+
+Rules and limits:
+
+- Nothing is recognized and nothing is prefilled from Review notes: the answer key is what you tapped and confirmed, never recognizer output.
+- A tap selects the nearest stroke within a tolerance (`config.quickLabelTapDistance`), **preferring ink that is not yet in a note or the selection**, so a stem beside the next note's head, or overlapping outlines of one head, stay reachable. If only a labeled stroke is near, the tap says which note owns it.
+- A stem must be a single stroke; a multi-stroke stem, dots, accidentals, rests, and eighths are not supported here (use **Record fixture**).
+- The file still needs a `roles.ts` entry and, as a recorded regression fixture, a session in `tests/fixtures/personal-sessions.ts`; session export/import automation is a planned later step. Do not use the same strokes to train and to test: training strokes come from guided training, test measures from here.
+
 ## Using personal samples in review (PR 3)
 
 - **When read:** at each **Review notes** tap, the main thread reads the stored samples fresh (so multi-tab changes are seen), shows the bank, and sends the validated samples to the worker. The worker builds the merged bank and prepares the clouds off the ink-render thread.
