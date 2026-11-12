@@ -1,5 +1,6 @@
 import { config } from '../config';
 import { createHistory, executeCommand, redo, undo } from '../edit/history';
+import type { Command } from '../edit/history';
 import { addStrokeCommand } from '../edit/stroke-command';
 import { restoreCommand } from '../edit/restore-command';
 import { newPageCommand } from '../edit/new-page-command';
@@ -25,6 +26,10 @@ export interface InkSurface {
   undo: () => void;
   redo: () => void;
   snapshot: () => SketchDocument;
+  /** Read committed state without interrupting active ink. */
+  currentDocument: () => SketchDocument;
+  /** Opt-in reviewed commands must NEVER finalize active pen contact. */
+  applyReview: (command: Command<SketchDocument>) => void;
   restore: (document: SketchDocument) => void;
   newPage: () => void;
 }
@@ -219,6 +224,13 @@ export function attachInkSurface(
       }
       resize();
       fit();
+      notify();
+      scheduleRender();
+    },
+    currentDocument: () => history.document,
+    applyReview: (command) => {
+      if (ink.active) throw new Error('Lift the Pencil before keeping a review');
+      executeCommand(history, command);
       notify();
       scheduleRender();
     },

@@ -46,7 +46,7 @@ footer output:empty { display: none; }
 /* Reserve a stable status row: Drawing/Saving/Saved text must not resize the
    canvas and interrupt the very stroke whose status is changing. */
 #save-status { flex-basis: 100%; line-height: 1.3; min-height: 2.6em; }
-#backup-status, #storage-note { flex-basis: 100%; }
+#backup-status, #storage-note, #music-status { flex-basis: 100%; }
 [hidden] { display: none !important; }
 button {
   font: inherit;
@@ -88,6 +88,20 @@ dialog input:focus-visible, dialog select:focus-visible, dialog textarea:focus-v
 .fixture-actions { margin-top: 1rem; }
 button:disabled { opacity: 0.45; cursor: default; }
 button:focus-visible { outline: 3px solid #2c7663; outline-offset: 3px; }
+.review-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 23rem), 1fr)); gap: 1rem; }
+.review-panels section { min-width: 0; }
+.review-panels h3 { margin-bottom: 0.25rem; }
+.review-panels p { font-size: 0.9rem; }
+.review-ink { width: 100%; height: 10rem; border: 1px solid #d4d6cb; }
+.review-notation { overflow: auto; overscroll-behavior: contain; max-height: 28rem; border: 1px solid #d4d6cb; }
+.review-notation svg { display: block; max-width: none; }
+#review-status { display: block; margin-top: 1rem; }
+.review-actions { position: sticky; top: 0; z-index: 1; padding: 0.5rem 0; background: #fffef9; border-bottom: 1px solid #d4d6cb; }
+dialog .review-signature { max-width: 14rem; margin: 0.75rem 0; }
+.review-candidate { border-top: 1px solid #d4d6cb; padding: 0.5rem 0; }
+dialog .review-choice { flex-direction: row; align-items: center; min-height: 2.75rem; }
+.review-choice input { width: 1.4rem; height: 1.4rem; flex-shrink: 0; }
+.review-candidate pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 14rem; overflow: auto; font-size: 0.8rem; }
 #ink-debug {
   flex-basis: 100%;
   height: 10rem;
