@@ -48,6 +48,15 @@ npm ci
 npm run test:recognition-eval
 ```
 
+Later assembly work adds settings to shared `src/config.ts` and an assignment to `tests/fixtures/roles.ts`. Both files are pinned, so the v1 guard deliberately rejects that newer checkout even though primitive policy values and the recorded first-run result are unchanged. Replay in a separate frozen worktree instead of refreshing hashes:
+
+```sh
+git worktree add --detach ../sheetmusicomposer-pencil-v1 558fa7d
+cd ../sheetmusicomposer-pencil-v1
+npm ci
+npm run test:recognition-eval
+```
+
 The command is opt-in, separate from ordinary unit/fixture tests and CI. Source/data hash mismatches stop classification. If current code has evolved, use a separate worktree at the frozen commit rather than changing the stored hashes. The runner checks protocol integrity, not an accuracy target chosen after seeing the outcome; a passing test does not mean every symbol was recognized.
 
 This evaluation has now been **observed**, not left unseen for future tuning. Exact replays reproduce this result; they are not additional independent trials. If these failures are used to select or tune a later model, this collection is validation/development evidence for that process, and fresh held-out input is needed for a new independent accuracy claim. Do not silently add its samples as templates or calibration negatives.
