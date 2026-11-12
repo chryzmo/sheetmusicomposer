@@ -12,6 +12,9 @@ export const fixtureRoot = fileURLToPath(new URL('../../fixtures/', import.meta.
 const roles: Readonly<Record<string, FixtureRole>> = {
   'recorded/quarter-e4.json': 'regression',
   'recorded/sample-fail.json': 'regression',
+  'recorded/a4-whole-x4.json': 'regression',
+  'recorded/c5-quarters-half-whole.json': 'regression',
+  'recorded/e4-seven-notes.json': 'regression',
   'synthetic/quarter-c4.json': 'regression',
   'synthetic/half-e4.json': 'regression',
   'synthetic/unknown-mark.json': 'regression',
