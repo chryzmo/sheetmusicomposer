@@ -15,7 +15,7 @@ const observations = evaluatePrimitives(fixtures, bank);
 it('reports per-set/provenance confusion and rejection without claiming held-out accuracy', () => {
   const report = classificationReport(observations);
   console.info(report);
-  expect(observations).toHaveLength(41);
+  expect(observations).toHaveLength(50);
   expect(report).toContain('NOT held-out handwriting accuracy');
   expect(report).toContain('personal (recorded)');
   expect(report).toContain('synthetic-smoke (synthetic)');
@@ -29,6 +29,7 @@ it('records current regression outputs, preserving original ground truth includi
     ['synthetic-quarter-c4', ['unknown', 'stem']],
     ['synthetic-unknown-mark', ['unknown']],
     ['synthetic-classifier-linearity', ['stem', 'stem', 'unknown', 'unknown', 'unknown', 'unknown']],
+    ['synthetic-primitive-grouping', ['noteheadHollow', 'noteheadFilled', 'stem', 'unknown', 'noteheadHollow', 'noteheadHollow', 'unknown', 'unknown', 'unknown']],
   ] as const;
   for (const [name, labels] of baseline) {
     expect(observations.filter(({ fixtureName }) => fixtureName === name).map(({ result }) => result.label)).toEqual(labels);
