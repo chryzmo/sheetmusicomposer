@@ -4,11 +4,14 @@ import { attachFixtureRecorder } from './fixtures/recorder';
 import { attachInkSurface } from './ink/surface';
 import { createDocument } from './model/document';
 import { attachNoteReview } from './render/review-dialog';
+import { attachTemplateTraining } from './training/dialog';
 import type { NoteReviewUi } from './render/review-dialog';
 import { createAutosave, errorMessage } from './store/autosave';
 import type { SaveState } from './store/autosave';
 import { openSketchRepository } from './store/indexeddb';
 import type { SketchRepository } from './store/indexeddb';
+import { openTemplateRepository } from './store/template-store';
+import type { TemplateRepository } from './store/template-store';
 import { parseBackup, serializeBackup } from './store/schema';
 import './style.css';
 
@@ -72,6 +75,12 @@ try {
   repository = null;
 }
 
+// Templates fail independently of the sketch: if they cannot open, drawing,
+// saving, and review still work (on the built-in samples).
+let templateRepository: TemplateRepository | null = null;
+let templateError = '';
+try { templateRepository = await openTemplateRepository(); } catch (error) { templateError = errorMessage(error); }
+
 const musicNotice = ' Musical data is preserved. The canvas displays original ink only; Review notes is an experimental re-read, not a display of stored score corrections. New ink clears saved note/rest events; Undo restores them.';
 if (initialDocument.measures !== undefined) backupStatus.textContent = `Musical backup loaded.${musicNotice}`;
 
@@ -117,6 +126,7 @@ const surface = attachInkSurface(canvas, ({ document, strokeCount, canUndo, canR
 noteReview = attachNoteReview(required<HTMLButtonElement>('#review-notes'), surface, (notes, unresolved) => {
   backupStatus.textContent = `Review kept ${notes} note${notes === 1 ? '' : 's'} with ${unresolved} unresolved stroke${unresolved === 1 ? '' : 's'}. All raw ink is preserved. Undo reverses this step; new ink invalidates music.`;
 }, events.signal);
+attachTemplateTraining(required<HTMLButtonElement>('#train-templates'), surface.snapshot, templateRepository, templateError, events.signal);
 canvas.setAttribute('aria-disabled', 'false');
 fitButton.disabled = false;
 newButton.disabled = false;
@@ -228,6 +238,7 @@ if (import.meta.hot) import.meta.hot.dispose(() => {
   events.abort();
   panel.remove();
   for (const url of urls) URL.revokeObjectURL(url);
+  templateRepository?.close();
   void autosave?.flush().then(() => store?.close());
   if (!autosave) store?.close();
 });

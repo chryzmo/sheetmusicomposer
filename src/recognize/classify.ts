@@ -48,6 +48,15 @@ function geometryRejections(label: SimplePrimitive, strokes: readonly Stroke[], 
   return reasons;
 }
 
+/** Whether `strokes` would pass `label`'s own geometry gates, as a classifier
+ * candidate of that label would. Lets training reject samples that could never
+ * be accepted. Same experimental gates as classification; not a quality score.
+ */
+export function sampleGeometryRejections(label: SimplePrimitive, strokes: readonly Stroke[]): GeometryRejection[] {
+  const cloud = preparePointCloud(strokes);
+  return geometryRejections(label, strokes, cloud.bounds, cloudLinearityRatio(cloud.points));
+}
+
 /** Experimental, DOM-free classifier for an ALREADY GROUPED staff-space input.
  * No grouping, timing assumptions, confidence probabilities, or model edits.
  * Complete but unsupported/uncertain groups return unknown with all alternatives.

@@ -98,6 +98,18 @@ This new path has automated WebKit coverage only. The earlier accepted ink/fixtu
 
 See [review workflow/architecture/limits](notation-review.md). No native acceptance has been reported for this section yet.
 
+## Personal templates (training screen) — pending native acceptance
+
+New in this change. Automated WebKit tests use synthetic pointer events, so Pencil feel, layout, and real iPad storage behavior need hand checks. Saved samples are **not used by Review notes yet**; this section only checks capture, storage, and the screen.
+
+- Download a backup, then tap **New**. Draw about 5 filled noteheads, 5 hollow noteheads, and 5 stems as single strokes, at your normal writing size, spaced apart on the staff.
+- Tap **Personal templates**. The dialog should list one row per stroke with a small thumbnail and a shape menu set to **Skip**. Check scrolling and that Close and Save stay reachable in portrait and landscape.
+- Choose a shape for every stroke and save. Counts should update and the saved list should show recognizable thumbnails. Strokes you saved reset to Skip. Reopen the screen after closing: nothing should save twice.
+- Deliberately label a stem as a head, a tiny dot as a head, and a head as a stem. Each should be refused with a plain reason, without blocking the correct strokes.
+- Reload the page, then reopen the screen: saved samples and counts should remain. Delete one sample, then use **Delete all personal samples** (it should ask first). The sketch itself must stay unchanged throughout.
+- After training, check Review notes still behaves exactly as before (no change is expected).
+- Rapid strokes, palm rejection, navigation, undo/redo, backup/restore, and autosave should still work with the new toolbar button. Record the iPad/OS/Pencil and any stroke that is refused unexpectedly, with a screenshot.
+
 ## Known limitations
 
 - One current local sketch only; no library, accounts, or sync. Recognition is opt-in experimental one-measure review with singleton groups, not live transcription. No offline cold starts yet. Undo/redo and the view are session-only.

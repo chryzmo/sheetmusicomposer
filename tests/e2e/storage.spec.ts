@@ -32,7 +32,7 @@ async function readDraft(page: Page): Promise<unknown> {
 
 async function writeDraft(page: Page, value: unknown): Promise<void> {
   await page.evaluate(({ name, value }) => new Promise<void>((resolve, reject) => {
-    const request = indexedDB.open(name, 1);
+    const request = indexedDB.open(name);
     request.onsuccess = () => {
       const db = request.result;
       const transaction = db.transaction('sketches', 'readwrite');
@@ -266,7 +266,7 @@ test('a newer database schema is not downgraded or overwritten', async ({ page }
   await expectSaved(page);
   const original = await readDraft(page);
   await page.evaluate((name) => new Promise<void>((resolve, reject) => {
-    const request = indexedDB.open(name, 2);
+    const request = indexedDB.open(name, 3);
     request.onsuccess = () => { request.result.close(); resolve(); };
     request.onerror = () => reject(request.error);
     request.onblocked = () => reject(new Error('Upgrade blocked'));
