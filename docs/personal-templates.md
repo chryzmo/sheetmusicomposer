@@ -1,13 +1,13 @@
 # Personal templates (milestone 7)
 
-Status: **PR 3 of 4.** Samples can be trained, stored, listed, and deleted on the device, and **Review notes now uses them** together with the built-in bank. Automatic canvas recognition still does not exist.
+Status: **PR 4 of 4 (the plan is complete).** Samples can be trained, stored, listed, and deleted on the device, **Review notes uses them** together with the built-in bank, and `npm run test:fixtures` reports whether they help on held-out sessions. Automatic canvas recognition still does not exist.
 
 ## Plan
 
 1. **Model (this PR):** validated sample format, merge with the built-in bank, bank identity, tie-break rule, limits. DOM-free, in `src/recognize/user-templates.ts`.
 2. **Storage and training screen (this PR):** IndexedDB repository (database version 2) and the **Personal templates** screen. Covered by real WebKit end-to-end tests.
 3. **Wire into review (this PR):** see below.
-4. **Evaluation:** a leave-one-session-out report, so training on one's own samples never becomes the only measure.
+4. **Evaluation (this PR):** see below.
 
 ## Rules fixed by this PR
 
@@ -40,3 +40,21 @@ A throwaway experiment (not committed) added the other recorded files' primitive
 - **Invalidation:** Keep re-reads storage and compares bank identities. If the samples changed since the preview (another tab, a reset), nothing is kept and the dialog asks you to review again. Within one tab the training screen and the review are both modal, so they cannot overlap. A cancelled or replaced review still cannot be revived, as before.
 - **Failure behavior:** if a stored sample read fails, or a sample cannot be turned into a template, review **fails closed** with a message (it never silently reviews with a different bank). If the template store cannot open at all, review uses the built-in samples only and says so on screen.
 - **Priority** is unchanged from PR 1: pooled distance ranking, a personal template wins only an exact tie. Whether personal samples *help* on held-out handwriting is not established by this PR; the evaluation step (PR 4) measures that.
+
+## Evaluating personal samples (PR 4)
+
+`npm run test:fixtures` prints a report that simulates training from recorded fixtures and scores the built-in bank against the built-in plus personal bank on the same held-out ink. Code: `tests/fixtures/personal-eval.ts`, `personal-sessions.ts`, `personal.test.ts`.
+
+- **Simulated training uses the training screen's rules:** one complete stroke, the label's own geometry gates, the per-shape limit, manual fixture labels only (never recognizer output). Refused samples are listed in the report with the reason.
+- **Strict (primary):** leave-one-**session**-out. A held-out session is scored with samples from *other* sessions only. A session is one sitting of the writer, assigned by hand in `tests/fixtures/personal-sessions.ts` (never inferred from names or file times); measures drawn in the same sitting share a session because they are not independent. When unsure, merge into one session: coarser only makes the check stricter.
+- **Optimistic (for contrast):** leave-one-**fixture**-out, where other measures from the same sitting still train. It is printed only to show how much same-sitting reuse inflates results, and it is labeled NOT held out.
+- **Scored:** per-shape results on oracle groups (exact, wrong accepts, known rejects) and note-level results through the same singleton review the app uses (notes proposed exactly, wrong proposals). A fixture with no expected events is not scored for notes, since an empty list is not a claim of "no notes".
+- **Excluded:** the development fixture (already the built-in bank), the reserved evaluation fixture, and synthetic fixtures. The frozen `pencil-v1` evaluation files are untouched.
+- **One pre-stated safety rule, asserted per strict fold:** personal samples must not add wrong accepted shapes or wrong proposed notes that the built-in bank did not already make. This is the project's "unreadable ink stays ink" invariant, not an accuracy target. **No accuracy threshold is asserted**, so scores can be compared without a target chosen after seeing them.
+- **A new recorded fixture** needs a role (`roles.ts`) and, if it is a recorded regression fixture, a session (`personal-sessions.ts`) before the suite will run; that is a deliberate decision, as with roles.
+
+### First result (recorded fixtures at the time of this PR)
+
+Three sessions: the original Quarter-e4 recording (2 primitives, no scored notes), the mixed sample, and three measures recorded back to back. Strict folds, notes proposed exactly (built-in -> personal), wrong proposals 0 in every case: mixed sample 5/6 -> 5/6; three measures 8/15 -> 11/15 (12 samples from the other sessions); total 13/21 -> 16/21. Shapes: 24/34 -> 27/34 exact, wrong accepts 0. Optimistic reuse reaches 17/21, so same-sitting reuse inflated the result only slightly here.
+
+Read this carefully: it is **one writer**, three sessions, and one fold carries nearly all of the gain. The sessions that did not change (the mixed sample's first filled head, one whole head) are still rejected on the margin gate even with personal samples. One stem from the seven-note measure fails its own `stem-aspect` gate (too slanted) and would be refused by the training screen too, which suggests the stem slant limit may be tight for this writer; that is a threshold question for more data, not something this evaluation can settle. More sessions (especially recorded after training on the iPad) make the strict folds more meaningful.
