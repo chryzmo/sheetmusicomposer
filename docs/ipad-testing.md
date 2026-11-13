@@ -188,3 +188,11 @@ New ink now clears only the kept notes it comes near (within about 1.5 staff spa
 - Ink uses a constant visual width; there is no smoothing or pressure-based width yet.
 
 Record failures with reproduction steps and screenshots/video where possible. Do not claim device acceptance until this checklist has been run on the target hardware.
+
+## MusicXML export
+
+1. Keep a few notes (Review notes, then Keep selected notes), then tap **Export MusicXML**.
+2. A `.musicxml` file should download. Open it in MuseScore, Finale, Dorico or Notion and check pitches, durations and dots against the screen.
+3. Repitch one note and change another's duration, export again, and confirm the file shows the corrected values, not the original ink reading.
+4. Tap Export on a blank page: nothing downloads, and the status says no notes are kept.
+5. Leave one measure over- or underfull: the file still exports, and the status warns.
