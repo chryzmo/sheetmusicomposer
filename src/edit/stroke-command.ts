@@ -1,6 +1,7 @@
 import type { Stroke } from '../ink/types';
 import type { SketchDocument } from '../model/document';
 import type { Command } from './history';
+import { touchedEventIds } from './invalidation';
 
 export function addStrokeCommand(stroke: Stroke): Command<SketchDocument> {
   // Snapshot raw samples once at the command boundary. Later capture mutations
@@ -17,14 +18,19 @@ export function addStrokeCommand(stroke: Stroke): Command<SketchDocument> {
       if (document.strokes.some((item) => item.id === snapshot.id)) {
         throw new Error(`Stroke ${snapshot.id} already exists`);
       }
-      // Without region/gesture interpretation, new ink could alter ANY note.
-      // Invalidate music conservatively, preserving all assigned sources as
-      // unresolved. The new stroke stays unassigned ink; Undo restores music.
-      const order = document.measures === undefined ? null : new Map(document.strokes.map((s, i) => [s.id, i]));
-      const measures = document.measures?.map((m) => ({ ...m, events: [],
-        unresolvedStrokeIds: [...m.events.flatMap((e) => e.strokeIds), ...m.unresolvedStrokeIds]
-          .sort((a, b) => order!.get(a)! - order!.get(b)!),
-      }));
+      // New ink invalidates only the kept events it comes near (see
+      // touchedEventIds): their sources return to the measure's unresolved
+      // list, in capture order, and stay visible. Events elsewhere are kept.
+      // The new stroke stays unassigned ink; Undo restores the music.
+      const touched = touchedEventIds(document, snapshot);
+      const order = new Map(document.strokes.map((s, i) => [s.id, i]));
+      const measures = touched.size === 0 ? document.measures : document.measures?.map((m) => {
+        const gone = m.events.filter((e) => touched.has(e.id));
+        if (gone.length === 0) return m;
+        return { ...m, events: m.events.filter((e) => !touched.has(e.id)),
+          unresolvedStrokeIds: [...gone.flatMap((e) => e.strokeIds), ...m.unresolvedStrokeIds]
+            .sort((a, b) => order.get(a)! - order.get(b)!) };
+      });
       const next: SketchDocument = { ...document, strokes: [...document.strokes, snapshot],
         ...(measures === undefined ? {} : { measures }) };
       before = document; after = next;

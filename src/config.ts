@@ -124,6 +124,11 @@ export const config = {
   scribbleMinReversals: 3,
   scribbleReversalFraction: 0.2,
   scribbleMinSize: 2,
+  // New ink invalidates a kept note only if it comes within this many staff
+  // spaces of the note's ink or its written head position, since a stem, dot,
+  // accidental or flag drawn there could change what the note means. A guess,
+  // sized to the usual reach of those marks, to tune by hand on the iPad.
+  inkInvalidationMargin: 1.5,
   maxFixtureTextLength: 2000,
   maxFixtureDots: 2,
 } as const;

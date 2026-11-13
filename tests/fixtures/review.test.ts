@@ -106,8 +106,13 @@ it('reuses guarded score commands: intervening ink rejects stale acceptance atom
   expect(history.document).toBe(changed); expect(history.undoStack).toHaveLength(1);
   undo(history); executeCommand(history, command);
   const saved = history.document;
+  // Ink far from every kept note leaves the music alone; ink next to a note clears it.
   executeCommand(history, addStrokeCommand(extra));
-  expect(history.document.measures?.[0]?.events).toEqual([]);
+  expect(history.document.measures?.[0]?.events).toHaveLength(2);
+  undo(history); expect(history.document).toBe(saved);
+  const near = { ...extra, id: 'near-ink', points: extra.points.map((p) => ({ ...p, x: p.x - 10 })) };
+  executeCommand(history, addStrokeCommand(near));
+  expect(history.document.measures?.[0]?.events.map((e) => e.duration)).toEqual(['quarter']);
   undo(history); expect(history.document).toBe(saved);
 });
 

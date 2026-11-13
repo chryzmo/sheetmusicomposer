@@ -5,7 +5,7 @@ import { parseBackup, sketchFile } from '../../src/store/schema';
 import { databaseName } from '../../src/store/indexeddb';
 import { parseFixture } from '../../src/fixtures/schema';
 import { musicalDocument } from '../helpers/music';
-import { expectSaved, expectStrokes, hasInk, openSketch, pointer } from './ink-helpers';
+import { documentToScreen, expectSaved, expectStrokes, hasInk, openSketch, pointer } from './ink-helpers';
 
 async function draw(page: Page, x = 100): Promise<void> {
   const canvas = page.getByLabel('Music ink surface');
@@ -305,13 +305,25 @@ test('version-2 music survives restore, IndexedDB reload, and backup with all or
   expect(await downloadBackup(page)).toEqual(music);
 });
 
-test('new ink invalidates saved events while Undo/Redo and reload preserve their source ink', async ({ page }) => {
+test('new ink invalidates nearby saved events while Undo/Redo and reload preserve their source ink', async ({ page }) => {
   const music = musicalDocument();
   await openSketch(page);
   await upload(page, JSON.stringify(sketchFile(music)));
   await expectStrokes(page, 5);
   await expectSaved(page);
-  await draw(page);
+  // Ink far from every event leaves the music alone.
+  const canvas = page.getByLabel('Music ink surface');
+  const far = await documentToScreen(canvas, 30, 0);
+  await pointer(canvas, 'pointerdown', far.x, far.y); await pointer(canvas, 'pointerup', far.x + 20, far.y + 10);
+  await expectStrokes(page, 6);
+  await expectSaved(page);
+  expect((await downloadBackup(page)).measures).toEqual(music.measures);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expectStrokes(page, 5);
+  await expectSaved(page);
+  // Ink on the events' own ink takes them (the sample events share one spot).
+  const near = await documentToScreen(canvas, 4.2, 5);
+  await pointer(canvas, 'pointerdown', near.x, near.y); await pointer(canvas, 'pointerup', near.x + 20, near.y + 10);
   await expectStrokes(page, 6);
   await expectSaved(page);
   const invalidated = await downloadBackup(page);

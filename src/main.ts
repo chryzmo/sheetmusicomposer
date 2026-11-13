@@ -84,7 +84,7 @@ let templateRepository: TemplateRepository | null = null;
 let templateError = '';
 try { templateRepository = await openTemplateRepository(); } catch (error) { templateError = errorMessage(error); }
 
-const musicNotice = ' Musical data is preserved. The canvas displays original ink only; Review notes is an experimental re-read, not a display of stored score corrections. New ink clears saved note/rest events; Undo restores them.';
+const musicNotice = ' Musical data is preserved. The canvas displays original ink only; Review notes is an experimental re-read, not a display of stored score corrections. New ink near a saved note or rest clears it; Undo restores it.';
 if (initialDocument.measures !== undefined) backupStatus.textContent = `Musical backup loaded.${musicNotice}`;
 
 let saveState: SaveState = { kind: 'saved' };
@@ -142,7 +142,7 @@ const surface = attachInkSurface(canvas, ({ document, strokeCount, canUndo, canR
   },
 });
 noteReview = attachNoteReview(required<HTMLButtonElement>('#review-notes'), surface, (notes, unresolved) => {
-  backupStatus.textContent = `Review kept ${notes} note${notes === 1 ? '' : 's'} with ${unresolved} unresolved stroke${unresolved === 1 ? '' : 's'}. All raw ink is preserved. Undo reverses this step; new ink invalidates music.`;
+  backupStatus.textContent = `Review kept ${notes} note${notes === 1 ? '' : 's'} with ${unresolved} unresolved stroke${unresolved === 1 ? '' : 's'}. All raw ink is preserved. Undo reverses this step; new ink near a note clears that note.`;
 }, events.signal, { load: templateRepository ? () => templateRepository!.load() : null, unavailableReason: templateError });
 attachTemplateTraining(required<HTMLButtonElement>('#train-templates'), surface.snapshot, templateRepository, templateError, events.signal);
 canvas.setAttribute('aria-disabled', 'false');
