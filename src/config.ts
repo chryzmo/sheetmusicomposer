@@ -115,6 +115,15 @@ export const config = {
   noteGrabHoldMs: 450,
   noteGrabHoldTolerance: 0.3,
   noteGrabRadius: 1,
+  // Scribble-over to delete a kept note. Guesses to tune by hand, not recognition
+  // thresholds. A stroke is a scribble when it reverses direction at least
+  // `scribbleMinReversals` times along one axis (a reversal needs a move back of
+  // `scribbleReversalFraction` of that axis's extent, at least 0.15 spaces, so
+  // jitter does not count) and its larger side is at least `scribbleMinSize`
+  // staff spaces. It deletes each kept note whose head center it covers.
+  scribbleMinReversals: 3,
+  scribbleReversalFraction: 0.2,
+  scribbleMinSize: 2,
   maxFixtureTextLength: 2000,
   maxFixtureDots: 2,
 } as const;

@@ -129,6 +129,9 @@ const surface = attachInkSurface(canvas, ({ document, strokeCount, canUndo, canR
   onNoteMoved: ({ from, to }) => {
     backupStatus.textContent = `Moved a note from ${pitchName(from)} to ${pitchName(to)}. Undo reverses this step. Original ink is unchanged.`;
   },
+  onNotesDeleted: ({ pitches }) => {
+    backupStatus.textContent = `Deleted ${pitches.length === 1 ? `the ${pitchName(pitches[0]!)} note` : `${pitches.length} notes`}. Its ink stays visible and unresolved. Undo restores ${pitches.length === 1 ? 'it' : 'them'}.`;
+  },
   onDurationChanged: ({ pitch, from, to }) => {
     const measure = surface.currentDocument().measures?.[0];
     const total = measure && reviewDuration(measure.events.map((e) => e.duration), measure.timeSignature);

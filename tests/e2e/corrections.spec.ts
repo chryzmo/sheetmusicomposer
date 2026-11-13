@@ -136,3 +136,50 @@ test('a tap off any note is still an ink dot, and a tap during a drag does not c
   await pointer(canvas, 'pointerup', whole.x, whole.y);
   expect(await durations(page)).toEqual(['quarter', 'whole']); // a long hold is not a tap
 });
+
+/** A back-and-forth scribble of `legs` passes across [x0, x1] in screen pixels,
+ * drifting down by `step`. Callers centre it generously (a full staff space either
+ * side of a note): `screen()` assumes the initial fit, which a late layout resize
+ * can shift by a few pixels, and a tight box then misses the note's head.
+ */
+async function scribble(canvas: Locator, x0: number, x1: number, y: number, step: number, legs = 6): Promise<void> {
+  await pointer(canvas, 'pointerdown', x0, y);
+  for (let i = 1; i <= legs; i++) await pointer(canvas, 'pointermove', i % 2 ? x1 : x0, y + (step * i) / legs);
+  await pointer(canvas, 'pointerup', legs % 2 ? x1 : x0, y + step);
+}
+
+test('scribbling over a kept note deletes it from the music, keeps its ink as unresolved, and undoes', async ({ page }) => {
+  await openSketch(page); await keepBothNotes(page);
+  const canvas = page.getByLabel('Music ink surface');
+  const head = await screen(canvas, 4, 4), before = await backup(page);
+  // The download handler sets this text after the file is available; wait for it
+  // so it cannot land after, and overwrite, the delete message on a slow runner.
+  await expect(page.locator('#backup-status')).toContainText('Backup download requested');
+  await scribble(canvas, head.x - 1.5 * head.space, head.x + 1.5 * head.space, head.y - head.space, 2 * head.space);
+  await expectSaved(page);
+  await expect(page.locator('#backup-status')).toContainText('Deleted the E4 note. Its ink stays visible and unresolved.');
+  const after = await backup(page);
+  expect(after.measures![0]!.events.map((e) => e.duration)).toEqual(['whole']); // only the quarter went
+  expect(after.measures![0]!.unresolvedStrokeIds).toEqual(['review-head', 'review-stem', 'review-unknown']);
+  expect(after.strokes).toEqual(source.strokes); // the scribble is a gesture, never saved as ink
+  await expectStrokes(page, source.strokes.length);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click(); await expectSaved(page);
+  expect(await backup(page)).toEqual(before);
+  await page.getByRole('button', { name: 'Redo', exact: true }).click(); await expectSaved(page);
+  expect(await backup(page)).toEqual(after);
+});
+
+test('a scribble that covers no kept note is ordinary ink; a plain line over a note does not delete', async ({ page }) => {
+  await openSketch(page); await keepBothNotes(page);
+  const canvas = page.getByLabel('Music ink surface');
+  const away = await screen(canvas, 25, 2);
+  await scribble(canvas, away.x - 1.5 * away.space, away.x + 1.5 * away.space, away.y, 0.8 * away.space);
+  await expectStrokes(page, source.strokes.length + 1);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expectStrokes(page, source.strokes.length);
+  const head = await screen(canvas, 4, 4);
+  await pointer(canvas, 'pointerdown', head.x - 1.5 * head.space, head.y);
+  await pointer(canvas, 'pointermove', head.x, head.y);
+  await pointer(canvas, 'pointerup', head.x + 1.5 * head.space, head.y);
+  await expectStrokes(page, source.strokes.length + 1); // a line is ink (and clears kept notes, as for any new ink)
+});

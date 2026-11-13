@@ -159,6 +159,16 @@ A quick Pencil tap on a kept note's ring steps its duration quarter → half →
 - Holding instead of tapping should still start the pitch drag, not cycle the duration.
 - Only whole, half and quarter are cycled until flags exist; eighths and sixteenths are not yet drawn or recognized.
 
+## Scribble over a kept note to delete it — pending native acceptance
+
+Scribbling back and forth over a kept note's ring removes that note from the music. The note's ink is never deleted: it stays on the page and returns to the unresolved list. Automated tests use synthetic zigzags, so what a real scribble looks like has to be judged on the iPad.
+
+- Scribble across a ring (at least three back-and-forth passes, wider than about two staff spaces): the ring disappears, the status line says `Deleted the E4 note…`, the ink stays, and the scribble itself leaves no mark. Undo restores the note; Redo deletes it again.
+- A scribble covering several rings deletes all of them; the status line gives the count.
+- Scribble where there is no kept note: it should be an ordinary ink stroke. A plain line or slash over a note should also be ink, not a delete.
+- Try the cases that might be confused: filling in a new head close to a kept note, a long slanted stem stroke, a loop around a note. Note any that deleted a note you meant to keep, and any real scribble that was missed.
+- `scribbleMinReversals`, `scribbleReversalFraction` and `scribbleMinSize` in `src/config.ts` are guesses. Say whether you had to scribble harder or bigger than felt natural, or whether it fires too easily.
+
 ## Known limitations
 
 - One current local sketch only; no library, accounts, or sync. Recognition is opt-in experimental one-measure review with singleton groups, not live transcription. No offline cold starts yet. Undo/redo and the view are session-only.
