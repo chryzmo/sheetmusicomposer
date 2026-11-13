@@ -97,3 +97,42 @@ test('moving before the hold elapses, or holding off a note, is ordinary ink', a
   await pointer(canvas, 'pointerup', away.x, away.y);
   await expectStrokes(page, source.strokes.length + 1);
 });
+
+const durations = async (page: Page): Promise<string[]> => (await backup(page)).measures![0]!.events.map((e) => e.duration);
+
+test('tapping a kept note steps quarter, half, whole and back as undoable steps, ink unchanged', async ({ page }) => {
+  await openSketch(page); await keepBothNotes(page);
+  const canvas = page.getByLabel('Music ink surface');
+  const head = await screen(canvas, 4, 4); // quarter note, E4
+  const tap = async (): Promise<void> => { await pointer(canvas, 'pointerdown', head.x, head.y); await pointer(canvas, 'pointerup', head.x, head.y); await expectSaved(page); };
+  await tap();
+  // Read the status before backup(), whose download overwrites it.
+  await expect(page.locator('#backup-status')).toContainText('Changed the E4 note from quarter to half.');
+  await expect(page.locator('#backup-status')).toContainText('Measure is overfull: 6 of 4 quarter-note units in 4/4.');
+  expect(await durations(page)).toEqual(['half', 'whole']);
+  await tap();
+  expect(await durations(page)).toEqual(['whole', 'whole']);
+  await tap();
+  expect(await durations(page)).toEqual(['quarter', 'whole']);
+  expect((await backup(page)).strokes).toEqual(source.strokes); // taps never became ink
+  await expectStrokes(page, source.strokes.length);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click(); await expectSaved(page);
+  expect(await durations(page)).toEqual(['whole', 'whole']);
+  await page.getByRole('button', { name: 'Redo', exact: true }).click(); await expectSaved(page);
+  expect(await durations(page)).toEqual(['quarter', 'whole']);
+});
+
+test('a tap off any note is still an ink dot, and a tap during a drag does not cycle', async ({ page }) => {
+  await openSketch(page); await keepBothNotes(page);
+  const canvas = page.getByLabel('Music ink surface');
+  const away = await screen(canvas, 25, 2);
+  await pointer(canvas, 'pointerdown', away.x, away.y); await pointer(canvas, 'pointerup', away.x, away.y);
+  await expectStrokes(page, source.strokes.length + 1);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expectStrokes(page, source.strokes.length);
+  const whole = await screen(canvas, 10, 4);
+  await pointer(canvas, 'pointerdown', whole.x, whole.y);
+  await page.waitForTimeout(config.noteGrabHoldMs + 250);
+  await pointer(canvas, 'pointerup', whole.x, whole.y);
+  expect(await durations(page)).toEqual(['quarter', 'whole']); // a long hold is not a tap
+});

@@ -149,6 +149,16 @@ After **Review notes → Keep**, each kept note shows an orange ring on the page
 - The timing (`noteGrabHoldMs`), the allowed movement while holding (`noteGrabHoldTolerance`) and the grab size (`noteGrabRadius`) in `src/config.ts` are guesses. Say whether holding feels too slow, too sensitive, or hard to land on a head.
 - Drag past the top or bottom of the page range: the pitch should stop at the last valid pitch rather than jump.
 
+## Tap a kept note to change its duration — pending native acceptance
+
+A quick Pencil tap on a kept note's ring steps its duration quarter → half → whole → quarter. Automated tests use synthetic taps, so the feel has to be judged on the iPad.
+
+- Tap a ring: the note changes and the status line says what changed and whether the measure is now overfull, underfull or full. The measure is never repaired for you. Original ink does not move.
+- Undo and Redo step each change exactly.
+- A tap on empty staff, or a tap that drifts slightly, should still leave an ordinary ink dot or stroke. Note any tap that cycled a note when you meant to draw, or a deliberate tap that drew a dot instead. The tap tolerance is the same `noteGrabHoldTolerance` as the hold, and the time limit is `noteGrabHoldMs`.
+- Holding instead of tapping should still start the pitch drag, not cycle the duration.
+- Only whole, half and quarter are cycled until flags exist; eighths and sixteenths are not yet drawn or recognized.
+
 ## Known limitations
 
 - One current local sketch only; no library, accounts, or sync. Recognition is opt-in experimental one-measure review with singleton groups, not live transcription. No offline cold starts yet. Undo/redo and the view are session-only.
