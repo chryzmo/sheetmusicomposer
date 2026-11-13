@@ -1,13 +1,18 @@
 import { config } from '../config';
 import { createHistory, executeCommand, redo, undo } from '../edit/history';
 import type { Command } from '../edit/history';
+import { noteAnchors, noteAt } from '../edit/note-anchors';
+import type { NoteAnchor } from '../edit/note-anchors';
+import { repitchCommand } from '../edit/repitch-command';
 import { addStrokeCommand } from '../edit/stroke-command';
 import { restoreCommand } from '../edit/restore-command';
 import { newPageCommand } from '../edit/new-page-command';
 import { createDocument } from '../model/document';
 import type { SketchDocument } from '../model/document';
+import type { Pitch } from '../model/music';
+import { pitchAtStaffY, staffYFromPitch } from '../staff/pitch';
 import type { ViewTransform } from '../staff/coordinates';
-import { appendPoints, beginStroke, createInkState, finishStroke } from './capture';
+import { appendPoints, beginStroke, createInkState, discardStroke, finishStroke } from './capture';
 import { createNavigationState, endTouch, moveTouch, startTouch, suppressTouches } from './navigation';
 import { renderSurface } from './render';
 import { collectSamples } from './samples';
@@ -18,6 +23,11 @@ export interface InkSurfaceStatus {
   strokeCount: number;
   canUndo: boolean;
   canRedo: boolean;
+}
+
+export interface InkSurfaceCallbacks {
+  /** A drag committed a new pitch for a kept note (one undoable step). */
+  onNoteMoved?: (change: { from: Pitch; to: Pitch }) => void;
 }
 
 export interface InkSurface {
@@ -38,14 +48,25 @@ export function attachInkSurface(
   canvas: HTMLCanvasElement, onChange: (status: InkSurfaceStatus) => void,
   onDiagnostic: (message: string) => void = () => {},
   initialDocument: SketchDocument = createDocument(),
+  callbacks: InkSurfaceCallbacks = {},
 ): InkSurface {
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvas 2D is unavailable');
   const ink = createInkState();
   const history = createHistory(initialDocument);
+  // Long-press-then-drag on a kept note. `hold` is a pen contact that landed on a
+  // note and has not yet moved or timed out (its stroke is still being captured);
+  // `grab` is the drag after the hold succeeded (the stroke was discarded).
+  let hold: { pointerId: number; x: number; y: number; anchor: NoteAnchor; timer: ReturnType<typeof setTimeout> } | null = null;
+  let grab: { pointerId: number; anchor: NoteAnchor; pressY: number; pitch: Pitch } | null = null;
+  let anchorCache: { document: SketchDocument; anchors: readonly NoteAnchor[] } | null = null;
+  const anchors = (): readonly NoteAnchor[] => {
+    if (anchorCache?.document !== history.document) anchorCache = { document: history.document, anchors: noteAnchors(history.document) };
+    return anchorCache.anchors;
+  };
   const notify = (): void => onChange({
     document: history.document,
-    isDrawing: ink.active !== null,
+    isDrawing: ink.active !== null || grab !== null,
     strokeCount: history.document.strokes.length,
     canUndo: ink.active !== null || history.undoStack.length > 0,
     canRedo: ink.active === null && history.redoStack.length > 0,
@@ -62,7 +83,10 @@ export function attachInkSurface(
     if (frame !== null) return;
     frame = requestAnimationFrame(() => {
       frame = null;
-      renderSurface(canvas, context, view, history.document, ink);
+      renderSurface(canvas, context, view, history.document, ink, {
+        anchors: anchors(),
+        grab: grab ? { eventId: grab.anchor.eventId, pitch: grab.pitch, y: staffYFromPitch(grab.pitch) } : null,
+      });
     });
   };
   const release = (id: number): void => {
@@ -76,7 +100,21 @@ export function attachInkSurface(
       if (!(error instanceof DOMException) || error.name !== 'NotFoundError') throw error;
     }
   };
+  const clearHold = (): void => {
+    if (hold) clearTimeout(hold.timer);
+    hold = null;
+  };
+  const cancelGrab = (): void => {
+    if (!grab) return;
+    const id = grab.pointerId;
+    grab = null;
+    release(id);
+    notify();
+    scheduleRender();
+  };
   const finish = (completion: 'complete' | 'interrupted'): void => {
+    clearHold();
+    cancelGrab();
     const pointerId = ink.active?.pointerId;
     if (pointerId === undefined) return;
     onDiagnostic(`finish pointer=${pointerId} ${completion}`);
@@ -148,11 +186,28 @@ export function attachInkSurface(
     }
     if (event.pointerType !== 'pen' || event.button !== 0) return;
     event.preventDefault();
-    if (ink.active) finish('interrupted');
+    finish('interrupted');
     resize();
     suppressTouches(navigation);
-    if (!beginStroke(ink, event.pointerType, event.pointerId, crypto.randomUUID(), samples(event))) return;
+    const start = samples(event);
+    if (!beginStroke(ink, event.pointerType, event.pointerId, crypto.randomUUID(), start)) return;
     capture(event.pointerId);
+    const first = start[0]!, target = noteAt(anchors(), first, config.noteGrabRadius);
+    if (target) {
+      const pointerId = event.pointerId;
+      hold = { pointerId, x: first.x, y: first.y, anchor: target, timer: setTimeout(() => {
+        const active = ink.active;
+        if (!hold || !active || active.pointerId !== pointerId) return;
+        // Held in place on a note: this contact is a drag, not ink. Discard the
+        // partial stroke (never committed) and press at the last pen position.
+        const pressY = active.stroke.points.at(-1)?.y ?? hold.y;
+        grab = { pointerId, anchor: hold.anchor, pressY, pitch: hold.anchor.pitch };
+        hold = null;
+        discardStroke(ink, pointerId);
+        notify();
+        scheduleRender();
+      }, config.noteGrabHoldMs) };
+    }
     notify();
     scheduleRender();
   }, options);
@@ -167,6 +222,18 @@ export function attachInkSurface(
       }
       return;
     }
+    if (event.pointerType === 'pen' && grab?.pointerId === event.pointerId) {
+      event.preventDefault();
+      if (event.buttons === 0) { cancelGrab(); return; }
+      const point = samples(event).at(-1)!;
+      // Keep the offset from the press so the marker does not jump to the pen.
+      const pitch = pitchAtStaffY(grab.anchor.y + point.y - grab.pressY);
+      if (pitch && (pitch.step !== grab.pitch.step || pitch.octave !== grab.pitch.octave)) {
+        grab = { ...grab, pitch };
+        scheduleRender();
+      }
+      return;
+    }
     if (!isActivePen(event)) return;
     event.preventDefault();
     if (event.buttons === 0) {
@@ -174,7 +241,9 @@ export function attachInkSurface(
       finish('interrupted');
       return;
     }
-    appendPoints(ink, event.pointerId, samples(event));
+    const moved = samples(event);
+    appendPoints(ink, event.pointerId, moved);
+    if (hold && moved.some((p) => Math.hypot(p.x - hold!.x, p.y - hold!.y) > config.noteGrabHoldTolerance)) clearHold();
     scheduleRender();
   }, options);
   const endNavigationContact = (event: PointerEvent): boolean => {
@@ -189,6 +258,19 @@ export function attachInkSurface(
       endNavigationContact(event);
       return;
     }
+    if (event.pointerType === 'pen' && grab?.pointerId === event.pointerId) {
+      event.preventDefault();
+      const { anchor, pitch, pointerId } = grab;
+      grab = null;
+      release(pointerId);
+      if (pitch.step !== anchor.pitch.step || pitch.octave !== anchor.pitch.octave) {
+        executeCommand(history, repitchCommand(history.document, anchor.eventId, pitch));
+        callbacks.onNoteMoved?.({ from: anchor.pitch, to: pitch });
+      }
+      notify();
+      scheduleRender();
+      return;
+    }
     if (!isActivePen(event)) return;
     event.preventDefault();
     appendPoints(ink, event.pointerId, samples(event));
@@ -196,11 +278,15 @@ export function attachInkSurface(
   }, options);
   canvas.addEventListener('pointercancel', (event) => {
     onDiagnostic(`cancel ${event.pointerType} pointer=${event.pointerId}`);
-    if (!endNavigationContact(event) && isActivePen(event)) finish('interrupted');
+    if (endNavigationContact(event)) return;
+    if (grab?.pointerId === event.pointerId) cancelGrab();
+    else if (isActivePen(event)) finish('interrupted');
   }, options);
   canvas.addEventListener('lostpointercapture', (event) => {
     onDiagnostic(`capture lost pointer=${event.pointerId}`);
-    if (!endNavigationContact(event) && ink.active?.pointerId === event.pointerId) finish('interrupted');
+    if (endNavigationContact(event)) return;
+    if (grab?.pointerId === event.pointerId) cancelGrab();
+    else if (ink.active?.pointerId === event.pointerId) finish('interrupted');
   }, options);
   const interrupt = (): void => {
     finish('interrupted');
@@ -229,7 +315,7 @@ export function attachInkSurface(
     },
     currentDocument: () => history.document,
     applyReview: (command) => {
-      if (ink.active) throw new Error('Lift the Pencil before keeping a review');
+      if (ink.active || grab) throw new Error('Lift the Pencil before keeping a review');
       executeCommand(history, command);
       notify();
       scheduleRender();
@@ -245,6 +331,8 @@ export function attachInkSurface(
       scheduleRender();
     },
     undo: () => {
+      // Undo during a drag only abandons the drag, never an older command.
+      if (grab) { cancelGrab(); return; }
       // Finalize active ink first so Undo removes the partial current stroke,
       // not an older completed stroke. Its raw samples remain available to Redo.
       interrupt();
@@ -255,7 +343,7 @@ export function attachInkSurface(
     },
     redo: () => {
       // Drawing a new stroke takes precedence; do not mutate it via Redo.
-      if (ink.active) return;
+      if (ink.active || grab) return;
       clearNavigation();
       if (redo(history)) {
         notify();

@@ -1,4 +1,5 @@
 import { config } from './config';
+import { pitchName } from './edit/note-anchors';
 import { historyShortcut } from './edit/shortcuts';
 import { attachFixtureRecorder } from './fixtures/recorder';
 import { attachQuickLabel } from './fixtures/quick-label-dialog';
@@ -123,7 +124,11 @@ const surface = attachInkSurface(canvas, ({ document, strokeCount, canUndo, canR
   musicStatus.textContent = document.measures === undefined ? '' : `Music: ${document.measures.reduce((n, m) => n + m.events.length, 0)} events in document; ${document.measures.reduce((n, m) => n + m.unresolvedStrokeIds.length, 0)} unresolved assigned strokes. Canvas retains original ink.`;
   noteReview?.update({ document, isDrawing: drawing });
   showSaveStatus();
-}, diagnose, initialDocument);
+}, diagnose, initialDocument, {
+  onNoteMoved: ({ from, to }) => {
+    backupStatus.textContent = `Moved a note from ${pitchName(from)} to ${pitchName(to)}. Undo reverses this step. Original ink is unchanged.`;
+  },
+});
 noteReview = attachNoteReview(required<HTMLButtonElement>('#review-notes'), surface, (notes, unresolved) => {
   backupStatus.textContent = `Review kept ${notes} note${notes === 1 ? '' : 's'} with ${unresolved} unresolved stroke${unresolved === 1 ? '' : 's'}. All raw ink is preserved. Undo reverses this step; new ink invalidates music.`;
 }, events.signal, { load: templateRepository ? () => templateRepository!.load() : null, unavailableReason: templateError });

@@ -137,6 +137,17 @@ Review notes now reads your trained samples. Automated tests use synthetic ink, 
 - First-review latency with many samples (30 per shape is the limit): note whether opening the review feels slower.
 - Record fixtures of any new wrong proposals or surprising misses, for the evaluation step.
 
+## Repitch a kept note (hold, then drag) — pending native acceptance
+
+After **Review notes → Keep**, each kept note shows an orange ring on the page. Hold the Pencil still on a ring, then drag up or down to change its pitch. Automated tests drive synthetic pen events, so the feel of the gesture has to be judged on the iPad.
+
+- Hold the Pencil on a ring without moving: after about half a second the ring fills and a pitch label (for example `G4`) appears. Drag: the label steps by one line or space at a time. Lift: the note changes and the status line says `Moved a note from E4 to G4`. The original ink does not move.
+- Tap **Undo**: the pitch returns. **Redo** reapplies it. While still dragging, Undo only abandons the drag.
+- Start a stroke on a note and move straight away: it should be ordinary ink, not a grab. Try drawing slowly across a note and note any accidental grabs. (New ink still clears kept notes, as before; Undo restores them.)
+- Hold on empty staff, and hold on a note with a finger: neither should grab. A finger still pans.
+- The timing (`noteGrabHoldMs`), the allowed movement while holding (`noteGrabHoldTolerance`) and the grab size (`noteGrabRadius`) in `src/config.ts` are guesses. Say whether holding feels too slow, too sensitive, or hard to land on a head.
+- Drag past the top or bottom of the page range: the pitch should stop at the last valid pitch rather than jump.
+
 ## Known limitations
 
 - One current local sketch only; no library, accounts, or sync. Recognition is opt-in experimental one-measure review with singleton groups, not live transcription. No offline cold starts yet. Undo/redo and the view are session-only.

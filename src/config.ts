@@ -99,6 +99,14 @@ export const config = {
   // How close a tap must land to a stroke, in staff spaces, to select it while
   // labeling a test measure. A usability tolerance, not a recognition threshold.
   quickLabelTapDistance: 0.8,
+  // Long-press-then-drag to repitch a kept note. All three are usability guesses
+  // to be tuned by hand on the iPad, not recognition thresholds. The Pencil must
+  // stay within the tolerance (staff spaces) for the hold time (ms) on a note
+  // within the grab radius (staff spaces, from the note's head center); moving
+  // sooner is an ordinary ink stroke.
+  noteGrabHoldMs: 450,
+  noteGrabHoldTolerance: 0.3,
+  noteGrabRadius: 1,
   maxFixtureTextLength: 2000,
   maxFixtureDots: 2,
 } as const;

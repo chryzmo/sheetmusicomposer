@@ -23,6 +23,11 @@ export function appendPoints(state: InkState, pointerId: number, points: InkPoin
   return true;
 }
 
+/** Drop the active stroke without committing it (the contact became a gesture). */
+export function discardStroke(state: InkState, pointerId: number): void {
+  if (state.active?.pointerId === pointerId) state.active = null;
+}
+
 /** Detach captured ink; the coordinator commits it to the document via a command. */
 export function finishStroke(
   state: InkState, pointerId: number, completion: Stroke['completion'],
