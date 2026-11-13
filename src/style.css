@@ -125,3 +125,6 @@ dialog .review-choice { flex-direction: row; align-items: center; min-height: 2.
   overflow-wrap: anywhere;
   font-size: 0.75rem;
 }
+
+.tempo { display: inline-flex; align-items: center; gap: 0.35rem; font: inherit; }
+.tempo input { width: 4.5rem; font: inherit; padding: 0.35rem 0.4rem; }

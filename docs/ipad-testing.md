@@ -196,3 +196,12 @@ Record failures with reproduction steps and screenshots/video where possible. Do
 3. Repitch one note and change another's duration, export again, and confirm the file shows the corrected values, not the original ink reading.
 4. Tap Export on a blank page: nothing downloads, and the status says no notes are kept.
 5. Leave one measure over- or underfull: the file still exports, and the status warns.
+
+## Playback
+
+1. Keep a few notes, set a tempo, tap **Play**. The first tap loads the sound engine, so allow a moment. Notes should sound in order at the written pitch and length, rests silent.
+2. Tap **Stop** mid-way: sound should cut off at once, and Play should return. Tapping Play again should start from the beginning.
+3. Change the tempo and play again; try 40 and 240. Out-of-range values clamp.
+4. Check the silent switch and volume. Note whether audio is blocked while the ring/silent switch is on, and whether it resumes after switching apps and returning.
+5. Repitch a note or change a duration, then play: the sound should follow the correction.
+6. A dotted note should be held one and a half times as long; a sharp or flat should sound a semitone off. The triangle-wave tone and the 0.92 note fraction are guesses; say if notes blur or clip.
