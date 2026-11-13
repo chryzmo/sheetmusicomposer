@@ -135,6 +135,7 @@ Review notes now reads your trained samples. Automated tests use synthetic ink, 
 - Open a review, then change your samples in a second tab and return: Keep should refuse with a message and keep nothing. Review again and confirm the new bank.
 - Delete all personal samples and review again: the bank returns to built-in only, with the same proposals as before training.
 - First-review latency with many samples (30 per shape is the limit): note whether opening the review feels slower.
+- Heavy hollow heads (drawn with a retraced or thick outline) may now be left as red ink instead of becoming a note, if their ink density is at least 11 (see the matching diagnostics). Draw a few such hollow heads and note whether any is withheld, since that is the veto's cost. Dense scribbled filled heads that used to be misread as hollow should now stay as ink rather than become a wrong note.
 - Record fixtures of any new wrong proposals or surprising misses, for the evaluation step.
 
 ## Repitch a kept note (hold, then drag) — pending native acceptance

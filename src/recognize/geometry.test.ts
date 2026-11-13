@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { config } from '../config';
-import { cloudLinearityRatio } from './geometry';
+import { cloudInkDensity, cloudLinearityRatio } from './geometry';
 import { preparePointCloud } from './templates';
 import type { CloudPoint } from './templates';
 
@@ -49,4 +49,35 @@ it.each([
   [{ x: 2, y: 0 }, { x: 0, y: 1 }],
 ].map((points) => ({ points })))('rejects invalid or unbounded cloud input %#', ({ points }) => {
   expect(() => cloudLinearityRatio(points)).toThrow(RangeError);
+});
+
+const stroke = (points: readonly (readonly [number, number])[]) => [{ id: 's', points: points.map(([x, y]) => ({ x, y })) }];
+
+it('measures ink density as the resampled path length with the largest side normalized to one', () => {
+  // A straight line of any length is one unit long once normalized.
+  expect(cloudInkDensity(preparePointCloud(stroke([[0, 0], [0, 5]])).points)).toBeCloseTo(1, 6);
+  // An open loop is about pi; retracing it three times is about three times as dense.
+  const loop = Array.from({ length: 65 }, (_, i): [number, number] => [Math.cos(i / 64 * 2 * Math.PI), Math.sin(i / 64 * 2 * Math.PI)]);
+  const once = cloudInkDensity(preparePointCloud(stroke(loop)).points);
+  expect(once).toBeGreaterThan(2.9);
+  expect(once).toBeLessThan(3.2);
+  const thrice = cloudInkDensity(preparePointCloud(stroke([...loop, ...loop, ...loop])).points);
+  expect(thrice / once).toBeGreaterThan(2.7);
+});
+
+it('does not depend on scale, position, or how finely the pen sampled the path', () => {
+  const coarse = Array.from({ length: 17 }, (_, i): [number, number] => [Math.cos(i / 16 * 2 * Math.PI), 0.7 * Math.sin(i / 16 * 2 * Math.PI)]);
+  const fine = Array.from({ length: 401 }, (_, i): [number, number] => [Math.cos(i / 400 * 2 * Math.PI), 0.7 * Math.sin(i / 400 * 2 * Math.PI)]);
+  const moved = fine.map(([x, y]): [number, number] => [x * 37 + 500, y * 37 - 20]);
+  const a = cloudInkDensity(preparePointCloud(stroke(coarse)).points);
+  const b = cloudInkDensity(preparePointCloud(stroke(fine)).points);
+  const c = cloudInkDensity(preparePointCloud(stroke(moved)).points);
+  expect(Math.abs(b - c)).toBeLessThan(1e-9);
+  expect(Math.abs(a - b)).toBeLessThan(0.15);
+});
+
+it('rejects a cloud it cannot measure', () => {
+  expect(() => cloudInkDensity([])).toThrow(RangeError);
+  expect(() => cloudInkDensity([{ x: 0, y: 0 }])).toThrow(RangeError);
+  expect(() => cloudInkDensity([{ x: 0, y: 0 }, { x: Number.NaN, y: 0 }])).toThrow(RangeError);
 });

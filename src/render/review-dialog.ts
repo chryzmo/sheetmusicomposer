@@ -120,7 +120,7 @@ export function attachNoteReview(button: HTMLButtonElement, surface: InkSurface,
       const details = document.createElement('details'), summary = document.createElement('summary'), pre = document.createElement('pre');
       summary.textContent = 'Matching diagnostics (not probabilities)';
       pre.textContent = `Shape support: ${candidate.shapeSupport.toFixed(4)} (distance headroom only)\n` +
-        candidate.evidence.map((p) => `${p.label}: strokes ${p.strokeIds.map((id) => numbers.get(id)).join(', ')}; label gap ${p.margin?.toFixed(4)}; linearity ${p.linearityRatio.toFixed(4)}\n` +
+        candidate.evidence.map((p) => `${p.label}: strokes ${p.strokeIds.map((id) => numbers.get(id)).join(', ')}; label gap ${p.margin?.toFixed(4)}; linearity ${p.linearityRatio.toFixed(4)}; ink density ${p.inkDensity === null ? 'n/a (several strokes)' : p.inkDensity.toFixed(2)}\n` +
           p.candidates.map((c) => `  ${c.label}: distance ${c.distance.toFixed(4)}; ${c.templateId}; ${c.source.kind}; geometry ${c.geometryRejections.join(', ') || 'passes'}`).join('\n')).join('\n');
       // Provenance of the closest template per shape: personal or built-in.
       if (candidate.evidence.some((p) => p.candidates[0]?.source.kind === 'user')) {

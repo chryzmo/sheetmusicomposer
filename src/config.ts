@@ -32,6 +32,14 @@ export const config = {
   // validation). Both apply at 32 samples; revalidate if sampling changes.
   primitiveMaxDistance: 1.5,
   primitiveMinMargin: 0.1,
+  // Ink-density VETO for hollow heads (a guess, not calibrated): a single stroke the templates read as
+  // hollow is left as ink instead if its resampled path length (largest side = 1) is at least this.
+  // A hollow head is one open loop, about 3 (HOMUS: 1,010 hollow heads from 100 writers, none at or
+  // above 8, maximum 4.9). A tightly scribbled FILLED head was read as hollow at 13.4 in a recorded
+  // measure. The recorded writer's heaviest hollow heads reach about 10.4, so this sits just above them:
+  // it can only turn an accepted head into ink, never create a note, so a false veto costs a missed
+  // note, while a missed veto can cost a wrong one. Lowering it to 8 would lose one correct recorded note.
+  primitiveHollowVetoInkDensity: 11,
   // Plausible notehead bounds in staff spaces (filled and hollow share these).
   primitiveHeadMinWidth: 0.4,
   primitiveHeadMaxWidth: 1.8,
