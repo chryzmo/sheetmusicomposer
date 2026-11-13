@@ -137,7 +137,11 @@ test('a tap off any note is still an ink dot, and a tap during a drag does not c
   expect(await durations(page)).toEqual(['quarter', 'whole']); // a long hold is not a tap
 });
 
-/** A back-and-forth scribble of `legs` passes across [x0, x1] in screen pixels. */
+/** A back-and-forth scribble of `legs` passes across [x0, x1] in screen pixels,
+ * drifting down by `step`. Callers centre it generously (a full staff space either
+ * side of a note): `screen()` assumes the initial fit, which a late layout resize
+ * can shift by a few pixels, and a tight box then misses the note's head.
+ */
 async function scribble(canvas: Locator, x0: number, x1: number, y: number, step: number, legs = 6): Promise<void> {
   await pointer(canvas, 'pointerdown', x0, y);
   for (let i = 1; i <= legs; i++) await pointer(canvas, 'pointermove', i % 2 ? x1 : x0, y + (step * i) / legs);
@@ -151,7 +155,7 @@ test('scribbling over a kept note deletes it from the music, keeps its ink as un
   // The download handler sets this text after the file is available; wait for it
   // so it cannot land after, and overwrite, the delete message on a slow runner.
   await expect(page.locator('#backup-status')).toContainText('Backup download requested');
-  await scribble(canvas, head.x - 1.5 * head.space, head.x + 1.5 * head.space, head.y - 0.4 * head.space, 0.8 * head.space);
+  await scribble(canvas, head.x - 1.5 * head.space, head.x + 1.5 * head.space, head.y - head.space, 2 * head.space);
   await expectSaved(page);
   await expect(page.locator('#backup-status')).toContainText('Deleted the E4 note. Its ink stays visible and unresolved.');
   const after = await backup(page);
