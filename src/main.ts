@@ -1,5 +1,6 @@
 import { config } from './config';
 import { pitchName } from './edit/note-anchors';
+import { reviewDuration } from './render/notation-model';
 import { historyShortcut } from './edit/shortcuts';
 import { attachFixtureRecorder } from './fixtures/recorder';
 import { attachQuickLabel } from './fixtures/quick-label-dialog';
@@ -127,6 +128,14 @@ const surface = attachInkSurface(canvas, ({ document, strokeCount, canUndo, canR
 }, diagnose, initialDocument, {
   onNoteMoved: ({ from, to }) => {
     backupStatus.textContent = `Moved a note from ${pitchName(from)} to ${pitchName(to)}. Undo reverses this step. Original ink is unchanged.`;
+  },
+  onDurationChanged: ({ pitch, from, to }) => {
+    const measure = surface.currentDocument().measures?.[0];
+    const total = measure && reviewDuration(measure.events.map((e) => e.duration), measure.timeSignature);
+    // Report, never repair: the user decides how to fix an over/underfull measure.
+    const state = !total ? '' : total.units > total.target ? 'overfull' : total.units < total.target ? 'underfull' : 'full';
+    const fit = measure && total ? ` Measure is ${state}: ${total.units} of ${total.target} quarter-note units in ${measure.timeSignature}.` : '';
+    backupStatus.textContent = `Changed the ${pitchName(pitch)} note from ${from} to ${to}. Undo reverses this step.${fit}`;
   },
 });
 noteReview = attachNoteReview(required<HTMLButtonElement>('#review-notes'), surface, (notes, unresolved) => {

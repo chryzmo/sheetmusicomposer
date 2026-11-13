@@ -3,13 +3,14 @@ import { createHistory, executeCommand, redo, undo } from '../edit/history';
 import type { Command } from '../edit/history';
 import { noteAnchors, noteAt } from '../edit/note-anchors';
 import type { NoteAnchor } from '../edit/note-anchors';
+import { nextDuration, setDurationCommand } from '../edit/duration-command';
 import { repitchCommand } from '../edit/repitch-command';
 import { addStrokeCommand } from '../edit/stroke-command';
 import { restoreCommand } from '../edit/restore-command';
 import { newPageCommand } from '../edit/new-page-command';
 import { createDocument } from '../model/document';
 import type { SketchDocument } from '../model/document';
-import type { Pitch } from '../model/music';
+import type { Duration, Pitch } from '../model/music';
 import { pitchAtStaffY, staffYFromPitch } from '../staff/pitch';
 import type { ViewTransform } from '../staff/coordinates';
 import { appendPoints, beginStroke, createInkState, discardStroke, finishStroke } from './capture';
@@ -28,6 +29,8 @@ export interface InkSurfaceStatus {
 export interface InkSurfaceCallbacks {
   /** A drag committed a new pitch for a kept note (one undoable step). */
   onNoteMoved?: (change: { from: Pitch; to: Pitch }) => void;
+  /** A tap on a kept note committed a new duration (one undoable step). */
+  onDurationChanged?: (change: { pitch: Pitch; from: Duration; to: Duration }) => void;
 }
 
 export interface InkSurface {
@@ -274,6 +277,23 @@ export function attachInkSurface(
     if (!isActivePen(event)) return;
     event.preventDefault();
     appendPoints(ink, event.pointerId, samples(event));
+    if (hold?.pointerId === event.pointerId) {
+      // Lifted before the hold elapsed and without leaving the tolerance: a tap
+      // on a kept note, not ink. Discard the stroke and step its duration.
+      const { anchor, pointerId } = hold;
+      clearHold();
+      discardStroke(ink, pointerId);
+      release(pointerId);
+      const target = history.document.measures?.flatMap((m) => m.events).find((e) => e.id === anchor.eventId);
+      if (target) {
+        const to = nextDuration(target.duration);
+        executeCommand(history, setDurationCommand(history.document, anchor.eventId, to));
+        callbacks.onDurationChanged?.({ pitch: anchor.pitch, from: target.duration, to });
+      }
+      notify();
+      scheduleRender();
+      return;
+    }
     finish('complete');
   }, options);
   canvas.addEventListener('pointercancel', (event) => {
