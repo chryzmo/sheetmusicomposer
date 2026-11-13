@@ -148,6 +148,9 @@ test('scribbling over a kept note deletes it from the music, keeps its ink as un
   await openSketch(page); await keepBothNotes(page);
   const canvas = page.getByLabel('Music ink surface');
   const head = await screen(canvas, 4, 4), before = await backup(page);
+  // The download handler sets this text after the file is available; wait for it
+  // so it cannot land after, and overwrite, the delete message on a slow runner.
+  await expect(page.locator('#backup-status')).toContainText('Backup download requested');
   await scribble(canvas, head.x - 1.5 * head.space, head.x + 1.5 * head.space, head.y - 0.4 * head.space, 0.8 * head.space);
   await expectSaved(page);
   await expect(page.locator('#backup-status')).toContainText('Deleted the E4 note. Its ink stays visible and unresolved.');
