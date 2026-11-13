@@ -40,11 +40,9 @@ it('reports the new runtime bank separately from unchanged synthetic-bank baseli
   // every one must be NAMED here. The list must equal what the recognizer actually does: a new wrong
   // accept fails this test, and so does fixing a listed one without removing its entry, which keeps
   // the list honest. Entries are [fixture, 1-based stroke number, expected label, label it was read as].
-  const knownWrongAccepts = [
-    // A tightly scribbled filled head (ink density 13.4) read as hollow, so a quarter note is proposed as a half.
-    // Tracked for the filled/hollow second-opinion work; remove when fixed.
-    ['free-20261112-1656', 1, 'noteheadFilled', 'noteheadHollow'],
-  ] as const;
+  // (Empty now: the tightly scribbled filled head in free-20261112-1656, once read as hollow, is withheld by
+  // the ink-density veto. A future wrong accept is named here with a comment saying why.)
+  const knownWrongAccepts: readonly (readonly [string, number, string, string])[] = [];
   const wrongAccepts = observations.filter((o) => o.result.label !== 'unknown' && o.result.label !== o.expected).map((o) => {
     const { document } = fixtures.find(({ fixture }) => fixture.name === o.fixtureName)!.fixture;
     return [o.fixtureName, document.strokes.findIndex((s) => s.id === o.result.strokeIds[0]) + 1, o.expected, o.result.label];

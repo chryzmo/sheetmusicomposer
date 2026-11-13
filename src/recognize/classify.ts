@@ -1,12 +1,12 @@
 import { config } from '../config';
 import type { Stroke } from '../ink/types';
 import type { SimplePrimitive } from './primitives';
-import { cloudLinearityRatio } from './geometry';
+import { cloudInkDensity, cloudLinearityRatio } from './geometry';
 import { preparePointCloud, rankPointCloud } from './templates';
 import type { PointCloudTemplate, PreparedCloud, TemplateCandidate } from './templates';
 
 export type GeometryRejection = 'head-size' | 'head-aspect' | 'stem-size' | 'stem-aspect' | 'stem-strokes' | 'stem-linearity';
-export type PrimitiveRejection = 'interrupted' | 'no-templates' | 'geometry' | 'distance' | 'missing-alternative' | 'margin';
+export type PrimitiveRejection = 'interrupted' | 'no-templates' | 'geometry' | 'distance' | 'missing-alternative' | 'margin' | 'ink-density';
 export interface PrimitiveCandidate extends TemplateCandidate<SimplePrimitive> {
   readonly geometryRejections: readonly GeometryRejection[];
 }
@@ -15,6 +15,8 @@ interface ClassificationDetails {
   readonly bounds: PreparedCloud['bounds'];
   /** Geometric line-fit descriptor, not confidence; 0 is collinear, 1 isotropic. */
   readonly linearityRatio: number;
+  /** Resampled path length of a single stroke, largest side = 1 (see cloudInkDensity); null for several strokes. */
+  readonly inkDensity: number | null;
   /** Full best-per-label ranking, including geometrically ineligible labels. */
   readonly candidates: readonly PrimitiveCandidate[];
   /** Runner-up distance minus best distance; null without a second label. */
@@ -70,6 +72,7 @@ export function classifyPrimitive(strokes: readonly Stroke[], templates: readonl
   const candidates = rankPointCloud(cloud, templates).map((candidate): PrimitiveCandidate => ({
     ...candidate, geometryRejections: geometryRejections(candidate.label, strokes, cloud.bounds, linearityRatio),
   }));
+  const inkDensity = strokes.length === 1 ? cloudInkDensity(cloud.points) : null;
   const best = candidates[0], second = candidates[1];
   const margin = best && second ? second.distance - best.distance : null;
   // Do NOT discard ineligible labels and promote a farther-away match. Also
@@ -80,8 +83,11 @@ export function classifyPrimitive(strokes: readonly Stroke[], templates: readonl
     : best.distance > config.primitiveMaxDistance ? 'distance'
     : margin === null ? 'missing-alternative'
     : margin < config.primitiveMinMargin ? 'margin'
+    // Second opinion on head type: a dense scribble is a filled head, so a hollow reading of it is
+    // withheld as ink. One-directional on purpose: it only ever removes a reading.
+    : best.label === 'noteheadHollow' && inkDensity !== null && inkDensity >= config.primitiveHollowVetoInkDensity ? 'ink-density'
     : null;
-  const details: ClassificationDetails = { strokeIds: cloud.strokeIds, bounds: cloud.bounds, linearityRatio, candidates, margin };
+  const details: ClassificationDetails = { strokeIds: cloud.strokeIds, bounds: cloud.bounds, linearityRatio, inkDensity, candidates, margin };
   return rejection === null
     ? { ...details, label: best!.label, rejection: null }
     : { ...details, label: 'unknown', rejection };

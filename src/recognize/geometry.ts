@@ -26,3 +26,20 @@ export function cloudLinearityRatio(points: readonly CloudPoint[]): number {
   // Roundoff can make a collinear cloud's minor eigenvalue slightly negative.
   return Math.max(0, trace - spread) / (trace + spread);
 }
+
+/** Ink density: the length of a SINGLE stroke's resampled path, where the cloud is
+ * normalized so its largest side is 1. A single open loop is about 3; a head that is
+ * scribbled in is several times that. Measured on the classifier's own resampled
+ * cloud (not raw samples) so it does not depend on the device's sampling rate or
+ * jitter. Meaningless across several strokes (pen-up jumps add length), so callers
+ * use it for one stroke only. NOT a confidence or a shape match.
+ */
+export function cloudInkDensity(points: readonly CloudPoint[]): number {
+  if (points.length < 2 || points.length > config.maxPointCloudSampleCount ||
+      points.some(({ x, y }) => !Number.isFinite(x) || !Number.isFinite(y))) {
+    throw new RangeError('Expected a bounded point cloud');
+  }
+  let length = 0;
+  for (let i = 1; i < points.length; i++) length += Math.hypot(points[i]!.x - points[i - 1]!.x, points[i]!.y - points[i - 1]!.y);
+  return length;
+}

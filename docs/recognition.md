@@ -51,6 +51,15 @@ Tests cover seed-derived positives (explicitly not held-out data), geometry gate
 
 Personal handwriting templates are being added in stages; see [personal templates](personal-templates.md).
 
+## Ink-density veto for hollow heads
+
+A second opinion on head type, added after a recorded free-drawn measure proposed a quarter note as a half: a tightly scribbled **filled** head had its nearest template reading **hollow**. The classifier now measures **ink density** (`cloudInkDensity`): the length of a single stroke's resampled 32-point path with the largest side normalized to 1. An open loop is about 3; a scribbled-in head is several times that. It is taken from the classifier's own resampled cloud, so it does not depend on the device's sampling rate. If the templates read a single stroke as **hollow** and its density is at least `config.primitiveHollowVetoInkDensity` (11), the head is **withheld as ink** (rejection `ink-density`).
+
+- **One-directional on purpose.** It can only remove an accepted reading, never add or change one, so a false veto costs a missed note while a missed veto can cost a wrong note. It never fires on a head read as filled, and not on several-stroke groups (pen-up jumps would inflate the length).
+- **Evidence for 11, and its limits.** HOMUS (1,010 hollow heads, 100 writers) has none at or above 8 (maximum 4.9); the misread filled head measured 13.4; the recorded writer's heaviest hollow heads reach about 10.4. 11 sits just above that writer's heaviest correct hollow heads, so no correct recorded note is lost; 8 would lose one. The value is a guess from one writer and one failure, not a calibrated threshold; a writer whose hollow heads are heavier than that would see them left as ink.
+- **Not included:** using density to *accept* a head the templates rejected (a tie-break). It would add correct notes but, on the recorded data, would also read two heavy hollow heads as filled, so it waits for more heavy-hollow and small-filled examples.
+- Review diagnostics now list each shape's ink density.
+
 ## Evaluation status and next steps
 
 The **development/regression** comparisons below use manual/oracle primitive groups and the unchanged synthetic seed bank. The candidate policy and all 15 development templates are separately frozen before any evaluation recognition run. It does not measure grouping, pitch, duration, rendering, full-pipeline accuracy, or real iPad latency. Recorded input is not automatically held-out: the existing recording was already inspected during matcher development. No templates or thresholds were selected to improve its results.
