@@ -15,6 +15,7 @@ import { openSketchRepository } from './store/indexeddb';
 import type { SketchRepository } from './store/indexeddb';
 import { openTemplateRepository } from './store/template-store';
 import type { TemplateRepository } from './store/template-store';
+import { measuresToMusicXml } from './export/musicxml';
 import { parseBackup, serializeBackup } from './store/schema';
 import './style.css';
 
@@ -34,6 +35,7 @@ const redoButton = required<HTMLButtonElement>('#redo');
 const fitButton = required<HTMLButtonElement>('#fit-staff');
 const newButton = required<HTMLButtonElement>('#new-page');
 const downloadButton = required<HTMLButtonElement>('#download');
+const exportButton = required<HTMLButtonElement>('#export-musicxml');
 const restoreButton = required<HTMLButtonElement>('#restore');
 const retryButton = required<HTMLButtonElement>('#retry-save');
 const fileInput = required<HTMLInputElement>('#backup-file');
@@ -149,6 +151,7 @@ canvas.setAttribute('aria-disabled', 'false');
 fitButton.disabled = false;
 newButton.disabled = false;
 downloadButton.disabled = false;
+exportButton.disabled = false;
 restoreButton.disabled = false;
 
 newButton.addEventListener('click', () => {
@@ -172,8 +175,8 @@ document.addEventListener('keydown', (event) => {
 }, options);
 
 const urls = new Set<string>();
-function downloadJson(text: string, filename: string): void {
-  const blob = new Blob([text], { type: 'application/json' });
+function downloadJson(text: string, filename: string, type = 'application/json'): void {
+  const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   urls.add(url);
   const link = document.createElement('a');
@@ -198,6 +201,20 @@ downloadButton.addEventListener('click', () => {
   backupStatus.textContent = exceedsImportLimits
     ? 'Full backup download requested, but it exceeds this build’s import safety limits. Keep the file; raise the corresponding configured limits before restoring it.'
     : 'Backup download requested. Keep the JSON file somewhere safe.';
+}, options);
+exportButton.addEventListener('click', () => {
+  const measures = surface.snapshot().measures ?? [];
+  const notes = measures.reduce((total, measure) => total + measure.events.length, 0);
+  if (notes === 0) {
+    backupStatus.textContent = 'Nothing to export yet: no notes are kept. Use Review notes to keep notes first; unrecognized ink is not exported.';
+    return;
+  }
+  downloadJson(measuresToMusicXml(measures), `sheetmusicomposer-${new Date().toISOString().replace(/[:.]/g, '-')}.musicxml`, 'application/vnd.recordare.musicxml+xml');
+  const unfilled = measures.filter((m) => m.events.length > 0).some((m) => {
+    const total = reviewDuration(m.events.map((e) => e.duration), m.timeSignature);
+    return total.units !== total.target;
+  });
+  backupStatus.textContent = `MusicXML export requested: ${notes} kept event${notes === 1 ? '' : 's'}. Unrecognized ink is not included.${unfilled ? ' A measure does not fill its time signature; it is exported as kept.' : ''}`;
 }, options);
 restoreButton.addEventListener('click', () => fileInput.click(), options);
 fileInput.addEventListener('change', () => {
