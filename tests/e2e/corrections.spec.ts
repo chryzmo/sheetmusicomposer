@@ -5,7 +5,7 @@ import { config } from '../../src/config';
 import { parseFixture } from '../../src/fixtures/schema';
 import type { SketchDocument } from '../../src/model/document';
 import { parseBackup, serializeBackup } from '../../src/store/schema';
-import { expectSaved, expectStrokes, openSketch, pointer } from './ink-helpers';
+import { documentToScreen, expectSaved, expectStrokes, openSketch, pointer } from './ink-helpers';
 
 // Template-derived synthetic scene: a quarter (head review-head + stem) and a whole note, both E4.
 const fixture = parseFixture(await readFile(new URL('../../fixtures/synthetic/runtime-review.json', import.meta.url), 'utf8'));
@@ -30,20 +30,13 @@ async function keepBothNotes(page: Page): Promise<void> {
   await expectSaved(page);
 }
 
-/** Screen position of a document point under the initial fit (same rule as the surface). */
-async function screen(canvas: Locator, x: number, y: number): Promise<{ x: number; y: number; space: number }> {
-  const box = (await canvas.boundingBox())!;
-  const space = Math.min(config.initialSpaceSize, box.width / (config.staffWidth + 2 * config.viewPadding));
-  return { x: (box.width - config.staffWidth * space) / 2 + x * space, y: (box.height - 4 * space) / 2 + y * space, space };
-}
-
 const pitches = async (page: Page): Promise<string[]> =>
   (await backup(page)).measures![0]!.events.map((e) => (e.kind === 'note' ? `${e.pitch.step}${e.pitch.octave}` : 'rest'));
 
 test('holding the Pencil on a kept note then dragging repitches it as one undoable step, ink unchanged', async ({ page }) => {
   await openSketch(page); await keepBothNotes(page);
   const canvas = page.getByLabel('Music ink surface');
-  const head = await screen(canvas, 4, 4); // quarter note head, E4
+  const head = await documentToScreen(canvas, 4, 4); // quarter note head, E4
   await pointer(canvas, 'pointerdown', head.x, head.y);
   await page.waitForTimeout(config.noteGrabHoldMs + 250);
   await pointer(canvas, 'pointermove', head.x, head.y - head.space); // up one space = two steps: G4
@@ -63,7 +56,7 @@ test('holding the Pencil on a kept note then dragging repitches it as one undoab
 test('dragging back to the starting pitch, or cancelling, changes nothing', async ({ page }) => {
   await openSketch(page); await keepBothNotes(page);
   const canvas = page.getByLabel('Music ink surface');
-  const whole = await screen(canvas, 10, 4);
+  const whole = await documentToScreen(canvas, 10, 4);
   const before = await backup(page);
   await pointer(canvas, 'pointerdown', whole.x, whole.y);
   await page.waitForTimeout(config.noteGrabHoldMs + 250);
@@ -82,16 +75,16 @@ test('dragging back to the starting pitch, or cancelling, changes nothing', asyn
 test('moving before the hold elapses, or holding off a note, is ordinary ink', async ({ page }) => {
   await openSketch(page); await keepBothNotes(page);
   const canvas = page.getByLabel('Music ink surface');
-  const head = await screen(canvas, 4, 4);
+  const head = await documentToScreen(canvas, 4, 4);
   await pointer(canvas, 'pointerdown', head.x, head.y);
   await pointer(canvas, 'pointermove', head.x + head.space, head.y); // beyond tolerance at once
   await page.waitForTimeout(config.noteGrabHoldMs + 250);
   await pointer(canvas, 'pointermove', head.x + 2 * head.space, head.y);
   await pointer(canvas, 'pointerup', head.x + 2 * head.space, head.y);
   await expectStrokes(page, source.strokes.length + 1); await expectSaved(page);
-  expect((await backup(page)).measures![0]!.events).toEqual([]); // new ink invalidates music, as before
+  expect(await durations(page)).toEqual(['whole']); // ink beside the quarter takes only that note; the whole note stays
   await page.getByRole('button', { name: 'Undo', exact: true }).click(); await expectSaved(page);
-  const away = await screen(canvas, 25, 2);
+  const away = await documentToScreen(canvas, 25, 2);
   await pointer(canvas, 'pointerdown', away.x, away.y);
   await page.waitForTimeout(config.noteGrabHoldMs + 250);
   await pointer(canvas, 'pointerup', away.x, away.y);
@@ -103,7 +96,7 @@ const durations = async (page: Page): Promise<string[]> => (await backup(page)).
 test('tapping a kept note steps quarter, half, whole and back as undoable steps, ink unchanged', async ({ page }) => {
   await openSketch(page); await keepBothNotes(page);
   const canvas = page.getByLabel('Music ink surface');
-  const head = await screen(canvas, 4, 4); // quarter note, E4
+  const head = await documentToScreen(canvas, 4, 4); // quarter note, E4
   const tap = async (): Promise<void> => { await pointer(canvas, 'pointerdown', head.x, head.y); await pointer(canvas, 'pointerup', head.x, head.y); await expectSaved(page); };
   await tap();
   // Read the status before backup(), whose download overwrites it.
@@ -125,12 +118,12 @@ test('tapping a kept note steps quarter, half, whole and back as undoable steps,
 test('a tap off any note is still an ink dot, and a tap during a drag does not cycle', async ({ page }) => {
   await openSketch(page); await keepBothNotes(page);
   const canvas = page.getByLabel('Music ink surface');
-  const away = await screen(canvas, 25, 2);
+  const away = await documentToScreen(canvas, 25, 2);
   await pointer(canvas, 'pointerdown', away.x, away.y); await pointer(canvas, 'pointerup', away.x, away.y);
   await expectStrokes(page, source.strokes.length + 1);
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
   await expectStrokes(page, source.strokes.length);
-  const whole = await screen(canvas, 10, 4);
+  const whole = await documentToScreen(canvas, 10, 4);
   await pointer(canvas, 'pointerdown', whole.x, whole.y);
   await page.waitForTimeout(config.noteGrabHoldMs + 250);
   await pointer(canvas, 'pointerup', whole.x, whole.y);
@@ -139,7 +132,7 @@ test('a tap off any note is still an ink dot, and a tap during a drag does not c
 
 /** A back-and-forth scribble of `legs` passes across [x0, x1] in screen pixels,
  * drifting down by `step`. Callers centre it generously (a full staff space either
- * side of a note): `screen()` assumes the initial fit, which a late layout resize
+ * side of a note): `documentToScreen()` assumes the initial fit, which a late layout resize
  * can shift by a few pixels, and a tight box then misses the note's head.
  */
 async function scribble(canvas: Locator, x0: number, x1: number, y: number, step: number, legs = 6): Promise<void> {
@@ -151,7 +144,7 @@ async function scribble(canvas: Locator, x0: number, x1: number, y: number, step
 test('scribbling over a kept note deletes it from the music, keeps its ink as unresolved, and undoes', async ({ page }) => {
   await openSketch(page); await keepBothNotes(page);
   const canvas = page.getByLabel('Music ink surface');
-  const head = await screen(canvas, 4, 4), before = await backup(page);
+  const head = await documentToScreen(canvas, 4, 4), before = await backup(page);
   // The download handler sets this text after the file is available; wait for it
   // so it cannot land after, and overwrite, the delete message on a slow runner.
   await expect(page.locator('#backup-status')).toContainText('Backup download requested');
@@ -172,14 +165,41 @@ test('scribbling over a kept note deletes it from the music, keeps its ink as un
 test('a scribble that covers no kept note is ordinary ink; a plain line over a note does not delete', async ({ page }) => {
   await openSketch(page); await keepBothNotes(page);
   const canvas = page.getByLabel('Music ink surface');
-  const away = await screen(canvas, 25, 2);
+  const away = await documentToScreen(canvas, 25, 2);
   await scribble(canvas, away.x - 1.5 * away.space, away.x + 1.5 * away.space, away.y, 0.8 * away.space);
   await expectStrokes(page, source.strokes.length + 1);
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
   await expectStrokes(page, source.strokes.length);
-  const head = await screen(canvas, 4, 4);
+  const head = await documentToScreen(canvas, 4, 4);
   await pointer(canvas, 'pointerdown', head.x - 1.5 * head.space, head.y);
   await pointer(canvas, 'pointermove', head.x, head.y);
   await pointer(canvas, 'pointerup', head.x + 1.5 * head.space, head.y);
-  await expectStrokes(page, source.strokes.length + 1); // a line is ink (and clears kept notes, as for any new ink)
+  await expectStrokes(page, source.strokes.length + 1); // a line over a note is ink, and takes that note with it
+});
+
+test('ink far from kept notes leaves them and their markers; ink beside one takes only that note', async ({ page }) => {
+  await openSketch(page); await keepBothNotes(page);
+  const canvas = page.getByLabel('Music ink surface');
+  const far = await documentToScreen(canvas, 25, 2);
+  await pointer(canvas, 'pointerdown', far.x, far.y); await pointer(canvas, 'pointermove', far.x + 15, far.y + 8); await pointer(canvas, 'pointerup', far.x + 30, far.y);
+  await expectStrokes(page, source.strokes.length + 1); await expectSaved(page);
+  await expect(page.locator('#music-status')).toContainText('2 events in document');
+  expect(await durations(page)).toEqual(['quarter', 'whole']);
+  // The surviving notes are still correctable after drawing elsewhere.
+  const whole = await documentToScreen(canvas, 10, 4);
+  await pointer(canvas, 'pointerdown', whole.x, whole.y); await pointer(canvas, 'pointerup', whole.x, whole.y); await expectSaved(page);
+  expect(await durations(page)).toEqual(['quarter', 'quarter']); // a whole note taps to a quarter
+  const head = await documentToScreen(canvas, 4, 4);
+  await pointer(canvas, 'pointerdown', head.x + head.space, head.y); await pointer(canvas, 'pointerup', head.x + 2 * head.space, head.y); await expectSaved(page);
+  await expect(page.locator('#music-status')).toContainText('1 events in document');
+  expect(await durations(page)).toEqual(['quarter']);
+});
+
+test('a lift that jumps away from a note without moving first is ink, not a tap', async ({ page }) => {
+  await openSketch(page); await keepBothNotes(page);
+  const canvas = page.getByLabel('Music ink surface');
+  const head = await documentToScreen(canvas, 4, 4);
+  await pointer(canvas, 'pointerdown', head.x, head.y); await pointer(canvas, 'pointerup', head.x + 2 * head.space, head.y);
+  await expectStrokes(page, source.strokes.length + 1);
+  expect(await durations(page)).toEqual(['whole']); // the quarter was taken by the ink, and not cycled
 });

@@ -6,7 +6,7 @@ import { parseFixture } from '../../src/fixtures/schema';
 import type { SketchDocument } from '../../src/model/document';
 import { databaseName } from '../../src/store/indexeddb';
 import { parseBackup, serializeBackup } from '../../src/store/schema';
-import { expectSaved, expectStrokes, openSketch, pointer } from './ink-helpers';
+import { documentToScreen, expectSaved, expectStrokes, openSketch, pointer } from './ink-helpers';
 
 // Existing TEMPLATE-DERIVED synthetic scene, not new Pencil/independent accuracy.
 const fixture = parseFixture(await readFile(new URL('../../fixtures/synthetic/runtime-review.json', import.meta.url), 'utf8'));
@@ -80,8 +80,10 @@ test('explicitly selected notes persist with original samples, exact undo/redo, 
   await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled();
   expect(await backup(page)).toEqual(after);
   const canvas = page.getByLabel('Music ink surface');
-  await pointer(canvas, 'pointerdown', 100, 100); await pointer(canvas, 'pointerup', 110, 100); await expectSaved(page);
-  expect((await backup(page)).measures?.[0]?.events).toEqual([]);
+  // Ink beside the first note (quarter, E4) takes only that note; the whole note stays.
+  const head = await documentToScreen(canvas, 4, 4);
+  await pointer(canvas, 'pointerdown', head.x, head.y); await pointer(canvas, 'pointerup', head.x + 10, head.y); await expectSaved(page);
+  expect((await backup(page)).measures?.[0]?.events.map((e) => e.duration)).toEqual(['whole']);
   await page.getByRole('button', { name: 'Undo', exact: true }).click(); await expectSaved(page);
   expect(await backup(page)).toEqual(after);
 });

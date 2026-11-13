@@ -169,6 +169,15 @@ Scribbling back and forth over a kept note's ring removes that note from the mus
 - Try the cases that might be confused: filling in a new head close to a kept note, a long slanted stem stroke, a loop around a note. Note any that deleted a note you meant to keep, and any real scribble that was missed.
 - `scribbleMinReversals`, `scribbleReversalFraction` and `scribbleMinSize` in `src/config.ts` are guesses. Say whether you had to scribble harder or bigger than felt natural, or whether it fires too easily.
 
+## Drawing near kept notes (region invalidation) — pending native acceptance
+
+New ink now clears only the kept notes it comes near (within about 1.5 staff spaces of a note's ink or its marker), instead of every note on the page. Automated tests use synthetic strokes, so the margin has to be judged on the iPad.
+
+- Keep a few notes, then draw something well away from them (a new note further along the staff): the earlier notes' rings should stay and still respond to hold-drag, tap and scribble.
+- Draw next to a kept note (add a stem, a dot, a flag): that note's ring should disappear (its ink stays visible), and notes elsewhere should keep theirs. Undo restores it.
+- Look for both mistakes: a nearby mark that did **not** clear a note it changes (margin too small), and a mark that cleared a note you did not mean to touch (margin too large). `inkInvalidationMargin` in `src/config.ts` is a guess.
+- Pitch-correct a note, then draw beside its marker: it should still clear that note even though the ink is elsewhere.
+
 ## Known limitations
 
 - One current local sketch only; no library, accounts, or sync. Recognition is opt-in experimental one-measure review with singleton groups, not live transcription. No offline cold starts yet. Undo/redo and the view are session-only.

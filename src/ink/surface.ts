@@ -280,7 +280,11 @@ export function attachInkSurface(
     }
     if (!isActivePen(event)) return;
     event.preventDefault();
-    appendPoints(ink, event.pointerId, samples(event));
+    const lifted = samples(event);
+    appendPoints(ink, event.pointerId, lifted);
+    // The lift position counts too: a pen that jumps away between the last move and
+    // the lift left the tolerance, so it is not a tap.
+    if (hold && lifted.some((p) => Math.hypot(p.x - hold!.x, p.y - hold!.y) > config.noteGrabHoldTolerance)) clearHold();
     if (hold?.pointerId === event.pointerId) {
       // Lifted before the hold elapsed and without leaving the tolerance: a tap
       // on a kept note, not ink. Discard the stroke and step its duration.
