@@ -3,8 +3,10 @@ import { createHistory, executeCommand, redo, undo } from '../edit/history';
 import type { Command } from '../edit/history';
 import { noteAnchors, noteAt } from '../edit/note-anchors';
 import type { NoteAnchor } from '../edit/note-anchors';
+import { deleteEventsCommand } from '../edit/delete-command';
 import { nextDuration, setDurationCommand } from '../edit/duration-command';
 import { repitchCommand } from '../edit/repitch-command';
+import { scribbleTargets } from '../edit/scribble';
 import { addStrokeCommand } from '../edit/stroke-command';
 import { restoreCommand } from '../edit/restore-command';
 import { newPageCommand } from '../edit/new-page-command';
@@ -31,6 +33,8 @@ export interface InkSurfaceCallbacks {
   onNoteMoved?: (change: { from: Pitch; to: Pitch }) => void;
   /** A tap on a kept note committed a new duration (one undoable step). */
   onDurationChanged?: (change: { pitch: Pitch; from: Duration; to: Duration }) => void;
+  /** A scribble over kept notes removed them from the music (their ink stays). */
+  onNotesDeleted?: (change: { pitches: readonly Pitch[] }) => void;
 }
 
 export interface InkSurface {
@@ -290,6 +294,20 @@ export function attachInkSurface(
         executeCommand(history, setDurationCommand(history.document, anchor.eventId, to));
         callbacks.onDurationChanged?.({ pitch: anchor.pitch, from: target.duration, to });
       }
+      notify();
+      scheduleRender();
+      return;
+    }
+    // A scribble over kept notes is a delete gesture, not ink: discard the stroke
+    // and remove those notes (their ink returns to the unresolved list).
+    const scribbled = ink.active ? scribbleTargets(ink.active.stroke.points, anchors()) : [];
+    if (scribbled.length > 0) {
+      const pitches = anchors().filter((a) => scribbled.includes(a.eventId)).map((a) => a.pitch);
+      clearHold();
+      discardStroke(ink, event.pointerId);
+      release(event.pointerId);
+      executeCommand(history, deleteEventsCommand(history.document, scribbled));
+      callbacks.onNotesDeleted?.({ pitches });
       notify();
       scheduleRender();
       return;
