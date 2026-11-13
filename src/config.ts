@@ -129,6 +129,16 @@ export const config = {
   // accidental or flag drawn there could change what the note means. A guess,
   // sized to the usual reach of those marks, to tune by hand on the iPad.
   inkInvalidationMargin: 1.5,
+  // Playback guesses, not recognition thresholds. Tempo is quarter notes per
+  // minute whatever the time signature (so 6/8 counts eighths at twice that).
+  // Each note sounds for this fraction of its written length so repeats re-attack.
+  // The small start delay lets the audio context settle before the first note.
+  playbackDefaultBpm: 100,
+  playbackMinBpm: 40,
+  playbackMaxBpm: 240,
+  playbackNoteFraction: 0.92,
+  playbackStartDelaySeconds: 0.1,
+  playbackSynth: { oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.6, release: 0.15 } },
   maxFixtureTextLength: 2000,
   maxFixtureDots: 2,
 } as const;

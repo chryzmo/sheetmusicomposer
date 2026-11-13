@@ -16,6 +16,8 @@ import type { SketchRepository } from './store/indexeddb';
 import { openTemplateRepository } from './store/template-store';
 import type { TemplateRepository } from './store/template-store';
 import { measuresToMusicXml } from './export/musicxml';
+import { createPlayer } from './playback/player';
+import { scheduleMeasures } from './playback/schedule';
 import { parseBackup, serializeBackup } from './store/schema';
 import './style.css';
 
@@ -36,6 +38,8 @@ const fitButton = required<HTMLButtonElement>('#fit-staff');
 const newButton = required<HTMLButtonElement>('#new-page');
 const downloadButton = required<HTMLButtonElement>('#download');
 const exportButton = required<HTMLButtonElement>('#export-musicxml');
+const playButton = required<HTMLButtonElement>('#play');
+const tempoInput = required<HTMLInputElement>('#tempo');
 const restoreButton = required<HTMLButtonElement>('#restore');
 const retryButton = required<HTMLButtonElement>('#retry-save');
 const fileInput = required<HTMLInputElement>('#backup-file');
@@ -152,6 +156,8 @@ fitButton.disabled = false;
 newButton.disabled = false;
 downloadButton.disabled = false;
 exportButton.disabled = false;
+playButton.disabled = false;
+tempoInput.disabled = false;
 restoreButton.disabled = false;
 
 newButton.addEventListener('click', () => {
@@ -202,6 +208,28 @@ downloadButton.addEventListener('click', () => {
     ? 'Full backup download requested, but it exceeds this build’s import safety limits. Keep the file; raise the corresponding configured limits before restoring it.'
     : 'Backup download requested. Keep the JSON file somewhere safe.';
 }, options);
+const player = createPlayer(() => { playButton.textContent = 'Play'; });
+tempoInput.min = String(config.playbackMinBpm);
+tempoInput.max = String(config.playbackMaxBpm);
+tempoInput.value = String(config.playbackDefaultBpm);
+playButton.addEventListener('click', () => {
+  if (player.playing) { player.stop(); return; }
+  const { events, totalBeats } = scheduleMeasures(surface.snapshot().measures ?? []);
+  if (!events.some((event) => event.midi !== null)) {
+    backupStatus.textContent = 'Nothing to play yet: no notes are kept. Use Review notes to keep notes first; unrecognized ink is silent.';
+    return;
+  }
+  const entered = Number(tempoInput.value);
+  const bpm = Math.min(config.playbackMaxBpm, Math.max(config.playbackMinBpm, Number.isFinite(entered) && entered > 0 ? entered : config.playbackDefaultBpm));
+  tempoInput.value = String(bpm);
+  playButton.textContent = 'Stop';
+  backupStatus.textContent = `Playing ${events.length} kept event${events.length === 1 ? '' : 's'} at ${bpm} bpm, as written.`;
+  player.play(events, totalBeats, bpm).catch((error: unknown) => {
+    player.stop();
+    backupStatus.textContent = `Could not start audio: ${error instanceof Error ? error.message : String(error)}.`;
+  });
+}, options);
+events.signal.addEventListener('abort', () => player.stop(), { once: true });
 exportButton.addEventListener('click', () => {
   const measures = surface.snapshot().measures ?? [];
   const notes = measures.reduce((total, measure) => total + measure.events.length, 0);
